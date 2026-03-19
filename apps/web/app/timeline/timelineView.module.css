@@ -120,3 +120,25 @@
   color: var(--primary-dark);
   text-decoration: underline;
 }
+
+.badgeLoop {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(245, 159, 0, 0.15);
+  color: var(--warning);
+}
+
+.badgeAction {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+}
