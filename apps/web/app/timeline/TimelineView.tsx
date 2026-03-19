@@ -41,14 +41,13 @@ export default function TimelineView({ artifacts, highlightedArtifactId, onSelec
       <Card className={styles.emptyState}>
         <h2>No summaries yet</h2>
         <p>Select a few documents from Drive or Gmail, then summarise them to build your timeline.</p>
-        <div className={styles.emptyActions}>
-          <Link href="/select/drive">
-            <Button variant="primary">Select from Drive</Button>
-          </Link>
-          <Link href="/getting-started">
-            <Button variant="secondary">View setup guide</Button>
-          </Link>
-        </div>
+        <Link href="/select/drive">
+          <Button variant="primary">Select from Drive</Button>
+        </Link>
+        <p className={styles.emptyStateSecondary}>
+          New here?{' '}
+          <Link href="/getting-started">View the setup guide</Link>
+        </p>
       </Card>
     );
   }

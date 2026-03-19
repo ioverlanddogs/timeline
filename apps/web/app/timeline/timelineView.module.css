@@ -72,13 +72,6 @@
   margin: 0;
 }
 
-.emptyActions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 8px;
-}
 
 .entry {
   display: grid;
@@ -115,4 +108,15 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 2px;
+}
+
+.emptyStateSecondary {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.emptyStateSecondary a {
+  color: var(--primary-dark);
+  text-decoration: underline;
 }
