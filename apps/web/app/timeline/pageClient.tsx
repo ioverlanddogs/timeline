@@ -468,6 +468,7 @@ export default function TimelinePageClient() {
   const [driveSelections, setDriveSelections] = useState<DriveSelection[]>([]);
   const [artifacts, setArtifacts] = useState<Record<string, SummaryArtifact>>({});
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summarizeBatchLabel, setSummarizeBatchLabel] = useState<string | null>(null);
   const [error, setError] = useState<SummarizeError>(null);
   const [errorRequestId, setErrorRequestId] = useState<string | null>(null);
   const [selectionMigrationWarning, setSelectionMigrationWarning] = useState(false);
@@ -667,6 +668,14 @@ export default function TimelinePageClient() {
     if (filterMode === 'actions') return visibleArtifacts.filter((a) => (a.artifact.suggestedActions?.length ?? 0) > 0);
     return visibleArtifacts;
   }, [filterMode, visibleArtifacts]);
+  const filterCounts = useMemo(() => ({
+    all: visibleArtifacts.length,
+    'open-loops': visibleArtifacts.filter((a) => (a.artifact.openLoops?.length ?? 0) > 0).length,
+    decisions: visibleArtifacts.filter((a) => (a.artifact.decisions?.length ?? 0) > 0).length,
+    actions: visibleArtifacts.filter((a) => (a.artifact.suggestedActions?.length ?? 0) > 0).length,
+    drive: visibleArtifacts.filter((a) => a.artifact.source === 'drive').length,
+    gmail: visibleArtifacts.filter((a) => a.artifact.source === 'gmail').length,
+  }), [visibleArtifacts]);
   const visibleEntryKeys = useMemo(
     () => new Set(visibleArtifacts.map((item) => item.entryKey)),
     [visibleArtifacts],
@@ -764,6 +773,10 @@ export default function TimelinePageClient() {
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
 
+        if (batches.length > 1) {
+          setSummarizeBatchLabel(`Batch ${i + 1} of ${batches.length}…`);
+        }
+
         const response = await fetch('/api/timeline/summarize', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -816,6 +829,7 @@ export default function TimelinePageClient() {
       setErrorRequestId(null);
     } finally {
       setIsSummarizing(false);
+      setSummarizeBatchLabel(null);
     }
   };
 
@@ -2111,7 +2125,9 @@ export default function TimelinePageClient() {
               disabled={timelineEntries.length === 0 || isSummarizing || isSummarizeCoolingDown}
               onClick={handleSummarize}
             >
-              {isSummarizing ? 'Generating...' : 'Generate summaries'}
+              {isSummarizing
+                ? (summarizeBatchLabel ?? 'Summarizing…')
+                : 'Generate summaries'}
             </Button>
             <Button variant="ghost" disabled={isSyncing} onClick={() => void handleSyncFromDrive()}>
               {isSyncing ? 'Syncing...' : 'Sync from Drive'}
@@ -2373,7 +2389,9 @@ export default function TimelinePageClient() {
         <div className={styles.notice}>
           Google returned an error — retry.
           <Button variant="ghost" onClick={handleSummarize} disabled={isSummarizing}>
-            Retry summaries
+            {isSummarizing
+              ? (summarizeBatchLabel ?? 'Summarizing…')
+              : 'Retry summaries'}
           </Button>
           <RequestIdNote requestId={errorRequestId} />
         </div>
@@ -2922,6 +2940,9 @@ export default function TimelinePageClient() {
                   onClick={() => setFilterMode(mode)}
                 >
                   {label}
+                  {filterCounts[mode] > 0 ? (
+                    <span className={styles.filterNavCount}>{filterCounts[mode]}</span>
+                  ) : null}
                 </button>
               ))}
               <p className={styles.filterNavLabel}>Source</p>
@@ -2937,6 +2958,9 @@ export default function TimelinePageClient() {
                   onClick={() => setFilterMode(mode)}
                 >
                   {label}
+                  {filterCounts[mode] > 0 ? (
+                    <span className={styles.filterNavCount}>{filterCounts[mode]}</span>
+                  ) : null}
                 </button>
               ))}
             </nav>

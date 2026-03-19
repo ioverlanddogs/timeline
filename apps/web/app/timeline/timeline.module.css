@@ -705,3 +705,11 @@
   word-break: break-all;
   margin-top: 2px;
 }
+
+.filterNavCount {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 400;
+  padding-left: 6px;
+}

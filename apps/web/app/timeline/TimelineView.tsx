@@ -111,6 +111,16 @@ export default function TimelineView({ artifacts, highlightedArtifactId, onSelec
                     </ul>
                     <div className={styles.metaRow}>
                       <span>{sourceTypeLabel(artifact)}</span>
+                      {(artifact.openLoops?.length ?? 0) > 0 ? (
+                        <span className={styles.badgeLoop}>
+                          {artifact.openLoops!.length} open loop{artifact.openLoops!.length !== 1 ? 's' : ''}
+                        </span>
+                      ) : null}
+                      {(artifact.suggestedActions?.filter((a) => a.status === 'proposed').length ?? 0) > 0 ? (
+                        <span className={styles.badgeAction}>
+                          {artifact.suggestedActions!.filter((a) => a.status === 'proposed').length} action{artifact.suggestedActions!.filter((a) => a.status === 'proposed').length !== 1 ? 's' : ''}
+                        </span>
+                      ) : null}
                       {people ? <span>• {people}</span> : null}
                       {location ? <span>• {location}</span> : null}
                       {amount ? <span>• {amount}</span> : null}
