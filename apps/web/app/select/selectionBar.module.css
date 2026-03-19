@@ -46,11 +46,11 @@
 }
 
 .error {
-  color: #b91c1c;
+  color: var(--danger);
 }
 
 .success {
-  color: #166534;
+  color: var(--success);
 }
 
 @media (max-width: 720px) {

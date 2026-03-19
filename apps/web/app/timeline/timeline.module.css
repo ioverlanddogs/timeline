@@ -339,7 +339,7 @@
   padding: 6px 12px;
   border-radius: 999px;
   background: rgba(59, 130, 246, 0.12);
-  color: #1e3a8a;
+  color: var(--primary-dark);
   font-weight: 600;
 }
 
@@ -502,7 +502,7 @@
 
 .actionsBlock {
   margin-top: 0.75rem;
-  border-top: 1px solid var(--border-subtle, #e5e7eb);
+  border-top: 1px solid var(--border);
   padding-top: 0.5rem;
 }
 
@@ -528,12 +528,12 @@
 }
 
 .actionItemMuted {
-  color: var(--text-muted, #6b7280);
+  color: var(--muted);
 }
 
 .actionInlineError {
   margin: 4px 0 0;
-  color: #b91c1c;
+  color: var(--danger);
   font-size: 0.85rem;
 }
 

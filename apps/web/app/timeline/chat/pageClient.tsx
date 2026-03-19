@@ -80,7 +80,7 @@ export default function TimelineChatPageClient() {
         <Link href="/timeline">Back to Timeline</Link>
       </div>
 
-      {error ? <p style={{ color: '#b00020' }}>{error}</p> : null}
+      {error ? <p style={{ color: 'var(--danger)' }}>{error}</p> : null}
       {answer ? (
         <article style={{ marginTop: 20 }}>
           <h2>Answer</h2>
@@ -91,7 +91,7 @@ export default function TimelineChatPageClient() {
                 alignItems: 'center',
                 gap: 6,
                 background: '#eff6ff',
-                color: '#1e3a8a',
+                color: 'var(--primary-dark)',
                 border: '1px solid #bfdbfe',
                 borderRadius: 8,
                 padding: '6px 10px',
@@ -106,7 +106,7 @@ export default function TimelineChatPageClient() {
           {showNoMatches ? (
             <div
               style={{
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border)',
                 borderRadius: 8,
                 background: '#f9fafb',
                 padding: 12,
