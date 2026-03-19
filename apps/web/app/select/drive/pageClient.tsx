@@ -104,6 +104,8 @@ export default function DriveSelectClient({ isConfigured }: DriveSelectClientPro
   const [searchSourceLabel, setSearchSourceLabel] = useState<string | null>(null);
   const [savedSets, setSavedSets] = useState<SavedSelectionSetMetadata[]>([]);
   const [savedSetsLoading, setSavedSetsLoading] = useState(false);
+  const [saveSearchOpen, setSaveSearchOpen] = useState(false);
+  const [saveSearchTitle, setSaveSearchTitle] = useState('');
   const [isSummarizingSelected, setIsSummarizingSelected] = useState(false);
   const [summarizeStatus, setSummarizeStatus] = useState<string | null>(null);
   const [summarizeError, setSummarizeError] = useState<'reconnect_required' | 'rate_limited' | 'server_error' | 'generic' | null>(null);
@@ -521,16 +523,14 @@ export default function DriveSelectClient({ isConfigured }: DriveSelectClientPro
 
   const saveSelectionSet = async () => {
     const defaultTitle = nameContains ? `Drive: ${nameContains}` : 'Drive search';
-    const rawTitle = window.prompt('Create saved search', defaultTitle);
-    if (!rawTitle) {
-      return;
-    }
+    setSaveSearchTitle(defaultTitle);
+    setSaveSearchOpen(true);
+  };
 
-    const title = rawTitle.trim();
-    if (!title) {
-      return;
-    }
-
+  const confirmSaveSearch = async () => {
+    const title = saveSearchTitle.trim();
+    if (!title) return;
+    const defaultTitle = nameContains ? `Drive: ${nameContains}` : 'Drive search';
     const response = await fetch('/api/saved-searches', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -551,11 +551,12 @@ export default function DriveSelectClient({ isConfigured }: DriveSelectClientPro
 
     if (!response.ok) {
       setNotice('Unable to save saved search. Please try again.');
-      return;
+    } else {
+      setNotice(`Saved search "${title}".`);
+      await loadSavedSelectionSets();
     }
-
-    setNotice(`Saved search "${title}".`);
-    await loadSavedSelectionSets();
+    setSaveSearchOpen(false);
+    setSaveSearchTitle('');
   };
 
   const applySavedSet = async (id: string) => {
@@ -734,23 +735,124 @@ export default function DriveSelectClient({ isConfigured }: DriveSelectClientPro
       {searchError && searchError !== 'reconnect_required' ? <div className={styles.notice}>{searchError}</div> : null}
       {notice ? <p className={styles.noticeSubtle}>{notice}</p> : null}
 
-      <div className={styles.panel}>
-        <div className={styles.panelHeader}>
-          <h2>Filters</h2>
-          <div className={styles.actions}>
-            <Button onClick={clearFilters} variant="ghost" disabled={isAnySummarizing || searchLoading}>
-              Clear filters
-            </Button>
-            <Button onClick={handleSearch} variant="secondary" disabled={isAnySummarizing || searchLoading}>
-              Search
-            </Button>
-            <Button onClick={() => void saveSelectionSet()} variant="ghost" disabled={isAnySummarizing}>
-              Create saved search
-            </Button>
-          </div>
-        </div>
+      <div className={styles.driveLayout}>
+        <div className={styles.driveMain}>
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Filters</h2>
+              <div className={styles.actions}>
+                <Button onClick={clearFilters} variant="ghost" disabled={isAnySummarizing || searchLoading}>
+                  Clear filters
+                </Button>
+                <Button onClick={handleSearch} variant="secondary" disabled={isAnySummarizing || searchLoading}>
+                  Search
+                </Button>
+                <Button onClick={() => void saveSelectionSet()} variant="ghost" disabled={isAnySummarizing}>
+                  Create saved search
+                </Button>
+              </div>
+            </div>
 
-        <div className={styles.filtersGrid}>
+            {/* Chip bar */}
+            <div className={styles.chipBar}>
+              {(
+                [
+                  { value: 'any', label: 'Any type' },
+                  { value: 'doc', label: 'Docs' },
+                  { value: 'pdf', label: 'PDFs' },
+                  { value: 'sheet', label: 'Sheets' },
+                  { value: 'slide', label: 'Slides' },
+                ] as Array<{ value: DriveMimeGroup; label: string }>
+              ).map(({ value, label }) => (
+                <button
+                  key={value}
+                  className={`${styles.filterChip} ${mimeGroup === value ? styles.filterChipActive : ''}`}
+                  onClick={() => {
+                    setMimeGroup(value);
+                    void executeSearch({
+                      q: buildDriveQuery({
+                        nameContains,
+                        mimeGroup: value,
+                        modifiedPreset,
+                        modifiedAfter: modifiedAfter || null,
+                        inFolderId: effectiveFolderId || null,
+                        ownerEmail: ownerEmail || null,
+                      }),
+                      sourceLabel: 'Quick filter',
+                      pageToken: null,
+                    });
+                  }}
+                  disabled={isAnySummarizing || searchLoading}
+                >
+                  {label}
+                </button>
+              ))}
+              <div className={styles.chipDivider} />
+              {(
+                [
+                  { value: '7d', label: 'Last 7 days' },
+                  { value: '30d', label: 'Last 30 days' },
+                  { value: '90d', label: 'Last 90 days' },
+                ] as Array<{ value: DriveModifiedPreset; label: string }>
+              ).map(({ value, label }) => (
+                <button
+                  key={value}
+                  className={`${styles.filterChip} ${modifiedPreset === value ? styles.filterChipActive : ''}`}
+                  onClick={() => {
+                    setModifiedPreset(value);
+                    void executeSearch({
+                      q: buildDriveQuery({
+                        nameContains,
+                        mimeGroup,
+                        modifiedPreset: value,
+                        modifiedAfter: modifiedAfter || null,
+                        inFolderId: effectiveFolderId || null,
+                        ownerEmail: ownerEmail || null,
+                      }),
+                      sourceLabel: 'Quick filter',
+                      pageToken: null,
+                    });
+                  }}
+                  disabled={isAnySummarizing || searchLoading}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Inline save-search form */}
+            {saveSearchOpen ? (
+              <div className={styles.inlineSaveForm}>
+                <input
+                  autoFocus
+                  className={styles.inlineSaveInput}
+                  value={saveSearchTitle}
+                  onChange={(e) => setSaveSearchTitle(e.target.value)}
+                  placeholder="Search name…"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void confirmSaveSearch();
+                    if (e.key === 'Escape') {
+                      setSaveSearchOpen(false);
+                      setSaveSearchTitle('');
+                    }
+                  }}
+                />
+                <Button onClick={() => void confirmSaveSearch()} disabled={!saveSearchTitle.trim()}>
+                  Save
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setSaveSearchOpen(false);
+                    setSaveSearchTitle('');
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : null}
+
+            <div className={styles.filtersGrid}>
           <label className={styles.field}>
             Name contains
             <input className={styles.input} value={nameContains} onChange={(event) => setNameContains(event.target.value)} />
@@ -810,17 +912,17 @@ export default function DriveSelectClient({ isConfigured }: DriveSelectClientPro
             />
             Limit to app folder
           </label>
-        </div>
+            </div>
 
-        {!driveFolderId ? <p className={styles.helperText}>Provision Drive folder on /connect.</p> : null}
+            {!driveFolderId ? <p className={styles.helperText}>Provision Drive folder on /connect.</p> : null}
 
-        <div className={styles.previewBox}>
-          <strong>Drive query</strong>
-          <code>{queryPreview}</code>
-        </div>
-      </div>
+            <div className={styles.previewBox}>
+              <strong>Drive query</strong>
+              <code>{queryPreview}</code>
+            </div>
+          </div>
 
-      <div className={styles.panel}>
+          <div className={styles.panel}>
         <div className={styles.panelHeader}>
           <h2>Saved searches</h2>
           {savedSetsLoading ? <span className={styles.muted}>Loading…</span> : null}
@@ -867,10 +969,10 @@ export default function DriveSelectClient({ isConfigured }: DriveSelectClientPro
         {savedSearchError === 'rate_limited' ? <p className={styles.noticeNeutral}>Drive rate limit reached. {savedSearchRetryTarget ? <button onClick={() => void summarizeSavedSearch(savedSearchRetryTarget.id, savedSearchRetryTarget.title)}>Retry</button> : null}</p> : null}
         {savedSearchError === 'server_error' ? <p className={styles.notice}>Unable to summarize saved search due to server error.{savedSearchRequestId ? ` Request ID: ${savedSearchRequestId}` : ''}</p> : null}
         {savedSearchError === 'generic' ? <p className={styles.notice}>Unable to summarize saved search.{savedSearchRequestId ? ` Request ID: ${savedSearchRequestId}` : ''}</p> : null}
-      </div>
+          </div>
 
-      {searchQuery ? (
-        <div className={styles.panel}>
+          {searchQuery ? (
+            <div className={styles.panel}>
           <div className={styles.panelHeader}>
             <div>
               <h2>Results ({resultCount})</h2>
@@ -974,8 +1076,62 @@ export default function DriveSelectClient({ isConfigured }: DriveSelectClientPro
               Next page
             </Button>
           ) : null}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+
+        <aside className={styles.selPanel}>
+          <p className={styles.selPanelLabel}>Selection</p>
+          <p className={styles.selPanelCount}>
+            {searchSelectedIds.length}
+            <span className={styles.selPanelTotal}> selected</span>
+          </p>
+          {searchSelectedIds.length > 0 ? (
+            <div className={styles.selList}>
+              {searchResults
+                .filter((f) => searchSelectedSet.has(f.id))
+                .slice(0, 6)
+                .map((f) => (
+                  <div key={f.id} className={styles.selListItem}>
+                    <span className={styles.selListName}>{f.name}</span>
+                  </div>
+                ))}
+              {searchSelectedIds.length > 6 ? (
+                <div className={styles.selListMore}>+{searchSelectedIds.length - 6} more</div>
+              ) : null}
+            </div>
+          ) : (
+            <p className={styles.selPanelEmpty}>No files selected yet. Search and tick files to add them.</p>
+          )}
+          <div className={styles.selPanelActions}>
+            <Button
+              aria-label="Summarize selected (panel)"
+              onClick={() => void summarizeSelectedNow()}
+              disabled={searchSelectedIds.length === 0 || isAnySummarizing}
+            >
+              {isSummarizingSelected ? (summarizeStatus ?? 'Summarizing…') : 'Summarize selected'}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => persistSelections(searchResults.filter((f) => searchSelectedSet.has(f.id)))}
+              disabled={searchSelectedIds.length === 0 || isAnySummarizing}
+            >
+              Add to Timeline
+            </Button>
+          </div>
+          {summarizeError ? (
+            <p className={styles.selPanelError}>
+              {summarizeError === 'reconnect_required' ? 'Reconnect required.' : 'Summarize failed.'}
+            </p>
+          ) : null}
+          {summarizedCount !== null ? (
+            <p className={styles.selPanelSuccess}>
+              {summarizedCount} file{summarizedCount !== 1 ? 's' : ''} summarised.{' '}
+              <Link href="/timeline">Open Timeline</Link>
+            </p>
+          ) : null}
+        </aside>
+      </div>
 
       <SelectionBar
         selectedCount={searchSelectedIds.length}

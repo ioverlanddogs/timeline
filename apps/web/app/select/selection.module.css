@@ -338,3 +338,189 @@
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
+
+.chipBar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-bottom: 12px;
+}
+
+.filterChip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  white-space: nowrap;
+}
+
+.filterChip:hover:not(:disabled) {
+  background: var(--background);
+  border-color: var(--primary);
+}
+
+.filterChip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filterChipActive {
+  background: var(--primary-bg);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.chipDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.inlineSaveForm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 0 4px;
+  flex-wrap: wrap;
+}
+
+.inlineSaveInput {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 0.9rem;
+  min-width: 200px;
+  background: var(--surface);
+  color: var(--text);
+  flex: 1;
+}
+
+.inlineSaveInput:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.driveLayout {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 0;
+  align-items: flex-start;
+}
+
+.driveMain {
+  min-width: 0;
+}
+
+.selPanel {
+  border-left: 1px solid var(--border);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+.selPanelLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.selPanelCount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin: 0;
+}
+
+.selPanelTotal {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.selPanelEmpty {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.selList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.selListItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.selListName {
+  font-size: 0.8rem;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selListMore {
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding-top: 2px;
+}
+
+.selPanelActions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.selPanelError {
+  font-size: 0.82rem;
+  color: var(--danger);
+  margin: 0;
+}
+
+.selPanelSuccess {
+  font-size: 0.82rem;
+  color: var(--success);
+  margin: 0;
+}
+
+.selPanelSuccess a {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .driveLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .selPanel {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    position: static;
+    max-height: none;
+  }
+}
