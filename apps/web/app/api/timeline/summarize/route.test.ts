@@ -123,7 +123,7 @@ describe('POST /api/timeline/summarize', () => {
     await expect(response.json()).resolves.toMatchObject({ error: 'provider_not_configured', error_code: 'provider_not_configured' });
   });
 
-  it('returns provider_bad_output when provider output is malformed', async () => {
+  it('records provider_bad_output as an item failure when provider output is malformed', async () => {
     mockGetGoogleSession.mockResolvedValue({ driveFolderId: 'folder-1' } as never);
     mockGetGoogleAccessToken.mockResolvedValue('token');
     mockCreateDriveClient.mockReturnValue({} as never);
@@ -150,8 +150,45 @@ describe('POST /api/timeline/summarize', () => {
       }) as never,
     );
 
-    expect(response.status).toBe(502);
-    await expect(response.json()).resolves.toMatchObject({ error: 'provider_bad_output', error_code: 'provider_bad_output' });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      artifacts: [],
+      failed: [{ source: 'gmail', id: 'id-1', error: 'provider_bad_output' }],
+    });
+  });
+
+  it('records provider_not_configured as an item failure when summarize fails per item', async () => {
+    mockGetGoogleSession.mockResolvedValue({ driveFolderId: 'folder-1' } as never);
+    mockGetGoogleAccessToken.mockResolvedValue('token');
+    mockCreateDriveClient.mockReturnValue({} as never);
+    mockCreateGmailClient.mockReturnValue({} as never);
+    mockFetchGmailMessageText.mockResolvedValue({ title: 'Demo', text: 'Hello', metadata: {} });
+    mockGetTimelineProviderFromDrive.mockResolvedValue({
+      settings: { provider: 'openai', model: 'gpt-4o-mini' },
+      provider: {
+        summarize: vi.fn().mockRejectedValue(
+          new ProviderError({
+            code: 'not_configured',
+            status: 500,
+            provider: 'timeline',
+            message: 'not configured',
+          }),
+        ),
+      },
+    } as never);
+
+    const response = await POST(
+      new Request('http://localhost/api/timeline/summarize', {
+        method: 'POST',
+        body: JSON.stringify({ items: [{ source: 'gmail', id: 'id-1' }] }),
+      }) as never,
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      artifacts: [],
+      failed: [{ source: 'gmail', id: 'id-1', error: 'provider_not_configured' }],
+    });
   });
 
   it('returns summary artifacts with selected provider model', async () => {
