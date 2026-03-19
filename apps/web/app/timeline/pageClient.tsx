@@ -10,6 +10,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { artifactKey, mergeArtifacts } from '../lib/artifactMerge';
 import { API_ERROR_CODES, parseApiError } from '../lib/apiErrors';
+import { chunkArray } from '../lib/chunkArray';
 import type { TimelineIndex } from '../lib/indexTypes';
 import { mergeSelectionItems } from '../lib/selectionMerge';
 import {
@@ -693,6 +694,8 @@ export default function TimelinePageClient() {
     });
   };
 
+  const SUMMARIZE_BATCH_SIZE = 10;
+
   const handleSummarize = async () => {
     if (selectionItems.length === 0) {
       return;
@@ -703,75 +706,64 @@ export default function TimelinePageClient() {
     setErrorRequestId(null);
     setFailedItems([]);
 
-    try {
-      const response = await fetch('/api/timeline/summarize', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          items: selectionItems.map((item) => ({ source: item.source, id: item.id })),
-        }),
-      });
+    const batches = chunkArray(
+      selectionItems.map((item) => ({ source: item.source, id: item.id })),
+      SUMMARIZE_BATCH_SIZE
+    );
 
-      if (!response.ok) {
-        const apiError = await parseApiError(response);
-        setErrorRequestId(apiError?.requestId ?? null);
-        if (apiError?.code === 'reconnect_required') {
-          setError('reconnect_required');
+    const allArtifacts: SummaryArtifact[] = [];
+    const allFailed: FailedItem[] = [];
+
+    try {
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+
+        const response = await fetch('/api/timeline/summarize', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ items: batch }),
+        });
+
+        if (!response.ok) {
+          const apiError = await parseApiError(response);
+          setErrorRequestId(apiError?.requestId ?? null);
+          if (apiError?.code === 'reconnect_required') { setError('reconnect_required'); return; }
+          if (apiError?.code === 'drive_not_provisioned') { setError('drive_not_provisioned'); return; }
+          if (apiError?.code === 'forbidden_outside_folder') { setError('forbidden_outside_folder'); return; }
+          if (apiError?.code === 'too_many_items') { setError('too_many_items'); return; }
+          if (apiError?.code === 'rate_limited') { setError('rate_limited'); setSummarizeCooldownUntil(Date.now() + 4000); return; }
+          if (apiError?.code === API_ERROR_CODES.upstreamTimeout || apiError?.code === API_ERROR_CODES.upstreamError) { setError(apiError.code); return; }
+          if (apiError?.code === API_ERROR_CODES.invalidRequest) { setError('invalid_request'); return; }
+          if (apiError?.code === API_ERROR_CODES.providerNotConfigured) { setError('provider_not_configured'); return; }
+          if (apiError?.code === API_ERROR_CODES.providerBadOutput) { setError('provider_bad_output'); return; }
+          setError('generic');
           return;
         }
-        if (apiError?.code === 'drive_not_provisioned') {
-          setError('drive_not_provisioned');
-          return;
+
+        const payload = (await response.json()) as {
+          artifacts: SummaryArtifact[];
+          failed: FailedItem[];
+        };
+
+        if (payload.artifacts?.length) {
+          allArtifacts.push(...payload.artifacts);
         }
-        if (apiError?.code === 'forbidden_outside_folder') {
-          setError('forbidden_outside_folder');
-          return;
+        if (payload.failed?.length) {
+          allFailed.push(...payload.failed);
         }
-        if (apiError?.code === 'too_many_items') {
-          setError('too_many_items');
-          return;
-        }
-        if (apiError?.code === 'rate_limited') {
-          setError('rate_limited');
-          setSummarizeCooldownUntil(Date.now() + 4000);
-          return;
-        }
-        if (apiError?.code === API_ERROR_CODES.upstreamTimeout || apiError?.code === API_ERROR_CODES.upstreamError) {
-          setError(apiError.code);
-          return;
-        }
-        if (apiError?.code === API_ERROR_CODES.invalidRequest) {
-          setError('invalid_request');
-          return;
-        }
-        if (apiError?.code === API_ERROR_CODES.providerNotConfigured) {
-          setError('provider_not_configured');
-          return;
-        }
-        if (apiError?.code === API_ERROR_CODES.providerBadOutput) {
-          setError('provider_bad_output');
-          return;
-        }
-        setError('generic');
-        return;
       }
 
-      const payload = (await response.json()) as {
-        artifacts: SummaryArtifact[];
-        failed: FailedItem[];
-      };
-
-      if (payload.artifacts?.length) {
-        const next = persistArtifacts(payload.artifacts, artifacts);
+      if (allArtifacts.length) {
+        const next = persistArtifacts(allArtifacts, artifacts);
         setArtifacts(next);
-        const driveFileId = payload.artifacts.find((artifact) => artifact.driveFileId)?.driveFileId;
+        const driveFileId = allArtifacts.find((artifact) => artifact.driveFileId)?.driveFileId;
         if (driveFileId) {
           setPendingArtifactId(driveFileId);
         }
       }
 
-      if (payload.failed?.length) {
-        setFailedItems(payload.failed);
+      if (allFailed.length) {
+        setFailedItems(allFailed);
       }
     } catch {
       setError('generic');
