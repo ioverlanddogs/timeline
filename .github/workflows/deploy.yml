@@ -27,7 +27,7 @@ jobs:
       - name: Install pnpm
         run: corepack prepare pnpm@9.15.9 --activate
       - name: Install Vercel CLI
-        run: pnpm add -g vercel@latest
+        run: npm install -g vercel@latest
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
         env:
@@ -74,7 +74,7 @@ jobs:
       - name: Install pnpm
         run: corepack prepare pnpm@9.15.9 --activate
       - name: Install Vercel CLI
-        run: pnpm add -g vercel@latest
+        run: npm install -g vercel@latest
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
