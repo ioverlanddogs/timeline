@@ -4,6 +4,7 @@
   "buildCommand": "pnpm -w run vercel:build",
   "installCommand": "pnpm -w run vercel:install",
   "framework": "nextjs",
+  "rootDirectory": "apps/web",
   "headers": [
     {
       "source": "/api/:path*",
@@ -11,6 +12,5 @@
         { "key": "Cache-Control", "value": "no-store, must-revalidate" }
       ]
     }
-  ],
-  "outputDirectory": "apps/web/.next"
+  ]
 }
