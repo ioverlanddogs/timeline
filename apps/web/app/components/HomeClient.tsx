@@ -54,9 +54,10 @@ export default function HomeClient() {
     count: 0,
     status: 'loading',
   });
+  const [lastSyncISO, setLastSyncISO] = useState<string | null>(null);
   const [recentArtifacts, setRecentArtifacts] = useState<SummaryArtifact[]>([]);
   const [openLoopCount, setOpenLoopCount] = useState(0);
-  const [lastSyncISO, setLastSyncISO] = useState<string | null>(null);
+
   const showConnectCta =
     calendarMetric.status === 'needs-connect' || timelineMetric.status === 'needs-connect';
 
@@ -130,7 +131,6 @@ export default function HomeClient() {
       });
       setRecentArtifacts([]);
       setOpenLoopCount(0);
-    } finally {
     }
   }, []);
 
@@ -213,11 +213,9 @@ export default function HomeClient() {
         <div>
           <p className={styles.recentLabel}>Recent summaries</p>
           {recentArtifacts.map((artifact) => {
-            const dateLabel = artifact.contentDateISO ?? artifact.createdAtISO
-              ? new Date(artifact.contentDateISO ?? artifact.createdAtISO ?? '').toLocaleDateString(
-                  'en-GB',
-                  { day: 'numeric', month: 'short' },
-                )
+            const rawDate = artifact.contentDateISO ?? artifact.createdAtISO;
+            const dateLabel = rawDate
+              ? new Date(rawDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
               : null;
             return (
               <div key={artifact.artifactId} className={styles.recentItem}>
@@ -251,6 +249,7 @@ export default function HomeClient() {
           </Button>
         </div>
       ) : null}
+
       {timelineMetric.status === 'error' ? (
         <div className={styles.inlineError}>
           <p>{timelineMetric.message}</p>
@@ -259,6 +258,7 @@ export default function HomeClient() {
           </Button>
         </div>
       ) : null}
+
     </div>
   );
 }
