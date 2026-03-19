@@ -1,5 +1,4 @@
 name: Deploy
-
 on:
   push:
     branches:
@@ -8,7 +7,6 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   deploy-preview:
     name: Deploy preview
@@ -17,31 +15,24 @@ jobs:
     environment:
       name: preview
       url: ${{ steps.deploy.outputs.url }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-
       - name: Enable corepack
         run: corepack enable
-
       - name: Install pnpm
         run: corepack prepare pnpm@9.15.9 --activate
-
       - name: Install Vercel CLI
         run: pnpm add -g vercel@latest
-
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
       - name: Deploy to Vercel (preview)
         id: deploy
         run: |
@@ -50,21 +41,19 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
       - name: Comment preview URL on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
         with:
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `### Preview deployment
-
-${{ steps.deploy.outputs.url }}`
+              body: '### Preview deployment\n\n' + process.env.DEPLOY_URL
             })
-
   deploy-production:
     name: Deploy production
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -73,36 +62,24 @@ ${{ steps.deploy.outputs.url }}`
     environment:
       name: production
       url: ${{ steps.deploy.outputs.url }}
-
-    # Wait for CI to pass on main before deploying
-    # This job runs after the CI workflow completes successfully.
-    # To enforce this, enable "Require status checks to pass before deploying"
-    # in the production environment protection rules in GitHub Settings.
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-
       - name: Enable corepack
         run: corepack enable
-
       - name: Install pnpm
         run: corepack prepare pnpm@9.15.9 --activate
-
       - name: Install Vercel CLI
         run: pnpm add -g vercel@latest
-
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
       - name: Deploy to Vercel (production)
         id: deploy
         run: |
