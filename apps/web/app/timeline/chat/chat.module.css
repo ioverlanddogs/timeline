@@ -189,3 +189,38 @@
     display: none;
   }
 }
+
+.suggestedRow {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--surface);
+}
+
+.suggestedLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 2px;
+}
+
+.suggestedQ {
+  background: none;
+  border: none;
+  padding: 3px 0;
+  font-size: 0.875rem;
+  color: var(--primary-dark);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: opacity 0.15s ease;
+}
+
+.suggestedQ:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
