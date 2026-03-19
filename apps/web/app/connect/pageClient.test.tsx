@@ -53,7 +53,7 @@ describe('ConnectPageClient', () => {
     expect(screen.getByText('3) Diagnostics')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByText('✅ Reachable')).toBeInTheDocument();
+      expect(screen.getByText('Reachable')).toBeInTheDocument();
     });
   });
 
