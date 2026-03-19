@@ -232,8 +232,8 @@ export default function ConnectPageClient({ initial, scopeStatus }: ConnectPageC
     <section className={styles.page}>
       <div className={styles.header}>
         <div>
-          <p>Check your Google connection status and fix issues in one place.</p>
           <h1>Connect</h1>
+          <p>Check your Google connection status and fix issues in one place.</p>
         </div>
       </div>
 
@@ -245,7 +245,7 @@ export default function ConnectPageClient({ initial, scopeStatus }: ConnectPageC
             <li>
               <span>Status</span>
               <Badge tone={authState.signedIn ? 'success' : 'warning'}>
-                {authState.signedIn ? '✅ Signed in' : '⚠️ Signed out'}
+                {authState.signedIn ? 'Signed in' : 'Signed out'}
               </Badge>
             </li>
             <li>
@@ -256,30 +256,30 @@ export default function ConnectPageClient({ initial, scopeStatus }: ConnectPageC
               <span>Drive</span>
               <Badge tone={capabilityStatus.drive ? 'success' : 'warning'}>
                 {capabilityStatus.unknown
-                  ? '⚠️ Unknown'
+                  ? 'Unknown'
                   : capabilityStatus.drive
-                    ? '✅ Ready'
-                    : '⚠️ Needs scope'}
+                    ? 'Ready'
+                    : 'Needs scope'}
               </Badge>
             </li>
             <li>
               <span>Gmail</span>
               <Badge tone={capabilityStatus.gmail ? 'success' : 'warning'}>
                 {capabilityStatus.unknown
-                  ? '⚠️ Unknown'
+                  ? 'Unknown'
                   : capabilityStatus.gmail
-                    ? '✅ Ready'
-                    : '⚠️ Needs scope'}
+                    ? 'Ready'
+                    : 'Needs scope'}
               </Badge>
             </li>
             <li>
               <span>Calendar</span>
               <Badge tone={capabilityStatus.calendar ? 'success' : 'warning'}>
                 {capabilityStatus.unknown
-                  ? '⚠️ Unknown'
+                  ? 'Unknown'
                   : capabilityStatus.calendar
-                    ? '✅ Ready'
-                    : '⚠️ Needs scope'}
+                    ? 'Ready'
+                    : 'Needs scope'}
               </Badge>
             </li>
           </ul>
@@ -317,7 +317,7 @@ export default function ConnectPageClient({ initial, scopeStatus }: ConnectPageC
             <li>
               <span>Status</span>
               <Badge tone={driveFolderId ? 'success' : 'warning'}>
-                {driveFolderId ? '✅ Drive folder provisioned' : '⚠️ Not provisioned'}
+                {driveFolderId ? 'Provisioned' : 'Not provisioned'}
               </Badge>
             </li>
             <li>
@@ -354,8 +354,8 @@ export default function ConnectPageClient({ initial, scopeStatus }: ConnectPageC
                 {healthState.isLoading
                   ? 'Checking...'
                   : healthState.reachable
-                    ? '✅ Reachable'
-                    : '⚠️ Unreachable'}
+                    ? 'Reachable'
+                    : 'Unreachable'}
               </Badge>
             </li>
             <li>
