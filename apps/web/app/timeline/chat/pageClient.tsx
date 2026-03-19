@@ -23,6 +23,13 @@ export default function TimelineChatPageClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const SUGGESTED_QUESTIONS = [
+    'What decisions were made this month?',
+    'What open loops are still unresolved?',
+    'Which documents mention a deadline?',
+    'Summarise the key themes across my timeline.',
+  ];
+
   const send = async () => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {
@@ -105,6 +112,49 @@ export default function TimelineChatPageClient() {
           {error ? <p className={styles.errorHint}>{error}</p> : null}
         </div>
 
+        {!answer && !loading ? (
+          <div className={styles.suggestedRow}>
+            <p className={styles.suggestedLabel}>Try asking</p>
+            {SUGGESTED_QUESTIONS.map((q) => (
+              <button
+                key={q}
+                className={styles.suggestedQ}
+                onClick={() => {
+                  const trimmed = q.trim();
+                  if (trimmed.length < 2) return;
+                  setQuery(q);
+                  setLoading(true);
+                  setError(null);
+                  fetch('/api/timeline/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: trimmed }),
+                  })
+                    .then(async (response) => {
+                      const payload = (await response.json()) as {
+                        answer?: string;
+                        citations?: Citation[];
+                        usedArtifactIds?: string[];
+                        error?: { message?: string };
+                      };
+                      if (!response.ok) {
+                        setError(payload.error?.message ?? 'Unable to chat with timeline artifacts.');
+                        return;
+                      }
+                      setAnswer(payload.answer ?? '');
+                      setCitations(Array.isArray(payload.citations) ? payload.citations : []);
+                      setUsedArtifactIds(Array.isArray(payload.usedArtifactIds) ? payload.usedArtifactIds : []);
+                    })
+                    .catch(() => setError('Unable to chat with timeline artifacts.'))
+                    .finally(() => setLoading(false));
+                }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         <div className={styles.inputRow}>
           <textarea
             className={styles.input}
@@ -128,22 +178,12 @@ export default function TimelineChatPageClient() {
 
       <aside className={styles.sourcesPanel}>
         <p className={styles.panelLabel}>Sources used</p>
-        {usedArtifactIds.length === 0 && !loading ? <p className={styles.panelEmpty}>None yet</p> : null}
-        {usedArtifactIds.map((id) => (
-          <div key={id} className={styles.sourceItem}>
-            <span className={styles.sourceLabel}>{id}</span>
+        {citations.length === 0 && !loading ? <p className={styles.panelEmpty}>None yet</p> : null}
+        {toUniqueCitationChips(citations).map((chip) => (
+          <div key={chip.artifactId} className={styles.sourceItem}>
+            <span className={styles.sourceLabel}>{chip.title ?? chip.artifactId}</span>
           </div>
         ))}
-        {citations.length > 0 ? (
-          <>
-            <p className={styles.panelLabel}>Citations</p>
-            {citations.map((citation, index) => (
-              <div key={index} className={styles.sourceItem}>
-                <span className={styles.sourceLabel}>{citation.title ?? citation.artifactId}</span>
-              </div>
-            ))}
-          </>
-        ) : null}
       </aside>
     </section>
   );
