@@ -149,7 +149,7 @@ export default function HomeClient() {
 
   return (
     <div className={styles.dashboard}>
-      {/* Metric row */}
+
       <div className={styles.metricRow}>
         <div className={styles.metricCard}>
           {timelineMetric.status === 'loading' ? (
@@ -181,7 +181,6 @@ export default function HomeClient() {
         </div>
       </div>
 
-      {/* Quick actions */}
       <div className={styles.quickActions}>
         <a href="/select/drive" className={styles.qaCard}>
           <div className={`${styles.qaIcon} ${styles.qaIconBlue}`}>+</div>
@@ -210,7 +209,6 @@ export default function HomeClient() {
         </a>
       </div>
 
-      {/* Recent summaries */}
       {recentArtifacts.length > 0 ? (
         <div>
           <p className={styles.recentLabel}>Recent summaries</p>
@@ -239,14 +237,12 @@ export default function HomeClient() {
         </div>
       ) : null}
 
-      {/* Connect CTA — keep existing behaviour */}
       {showConnectCta ? (
         <Button type="button" onClick={() => window.location.assign('/connect')}>
           Connect to get started
         </Button>
       ) : null}
 
-      {/* Error states — keep existing behaviour */}
       {calendarMetric.status === 'error' ? (
         <div className={styles.inlineError}>
           <p>{calendarMetric.message}</p>
