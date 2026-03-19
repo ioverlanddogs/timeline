@@ -53,15 +53,18 @@ export const DEFAULT_ADMIN_SETTINGS: Omit<AdminSettings, 'updatedAtISO'> = {
   version: 2,
   routing: {
     default: {
-      provider: 'stub',
+      provider: 'openai',
       model: 'gpt-4o-mini',
     },
   },
   prompts: {
-    system: '',
+    system:
+      'You are a precise, factual assistant helping a user understand their personal timeline of documents and communications. Ground every response in the provided source content. Be concise and avoid speculation.',
     chatPromptTemplate: '',
-    summarizePromptTemplate: '',
-    highlightsPromptTemplate: '',
+    summarizePromptTemplate:
+      'Summarise the following document accurately and concisely. Extract the key facts, decisions, action items, and any dates mentioned. Stay grounded in the source text and do not add information that is not present.',
+    highlightsPromptTemplate:
+      'Extract the single most important takeaway from this document in one sentence of 20 words or fewer.',
   },
   tasks: {
     chat: { ...DEFAULT_TASK_SETTINGS },
