@@ -12,6 +12,10 @@ jobs:
     name: Deploy preview
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     environment:
       name: preview
       url: ${{ steps.deploy.outputs.url }}
