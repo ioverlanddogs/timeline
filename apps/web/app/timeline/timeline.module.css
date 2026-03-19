@@ -333,9 +333,6 @@
 }
 
 .groupHeader {
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
   padding: 6px 12px;
   border-radius: 999px;
   background: rgba(59, 130, 246, 0.12);
@@ -418,6 +415,87 @@
   margin: 0;
   padding-left: 18px;
   color: var(--muted);
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 172px 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 60vh;
+}
+
+.filterNav {
+  border-right: 1px solid var(--border);
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--surface);
+}
+
+.filterNavLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 10px 4px;
+  margin: 0;
+}
+
+.filterNavItem {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.filterNavItem:hover {
+  background: var(--background);
+  color: var(--text);
+}
+
+.filterNavItemActive {
+  background: var(--background);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.filterContent {
+  padding: 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 720px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+
+  .filterNav {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 8px;
+    gap: 4px;
+  }
+
+  .filterNavLabel {
+    display: none;
+  }
 }
 
 .summaryActions {

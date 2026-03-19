@@ -215,6 +215,9 @@ describe('TimelinePageClient', () => {
 
     render(<TimelinePageClient />);
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /generate summaries/i })).toBeEnabled();
+    });
     fireEvent.click(screen.getByRole('button', { name: /generate summaries/i }));
 
     await waitFor(() => {
