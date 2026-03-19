@@ -181,7 +181,7 @@ export default function TimelineChatPageClient() {
         {citations.length === 0 && !loading ? <p className={styles.panelEmpty}>None yet</p> : null}
         {toUniqueCitationChips(citations).map((chip) => (
           <div key={chip.artifactId} className={styles.sourceItem}>
-            <span className={styles.sourceLabel}>{chip.title ?? chip.artifactId}</span>
+            <span className={styles.sourceLabel}>{chip.label ?? chip.artifactId}</span>
           </div>
         ))}
       </aside>
