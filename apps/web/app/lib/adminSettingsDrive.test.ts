@@ -20,7 +20,7 @@ describe('readAdminSettingsFromDrive', () => {
 
     const result = await readAdminSettingsFromDrive(drive as never, 'folder-1');
 
-    expect(result.settings.routing.default.provider).toBe('stub');
+    expect(result.settings.routing.default.provider).toBe('openai');
     expect(result.settings.routing.default.model).toBe(createDefaultAdminSettings().routing.default.model);
     expect(result.fileId).toBeUndefined();
   });
