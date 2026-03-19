@@ -7,6 +7,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Skeleton from '../components/ui/Skeleton';
 import styles from './gettingStarted.module.css';
+import { chunkArray } from '../lib/chunkArray';
 
 type StatusLabel = 'Not started' | 'Done' | 'Needs action';
 type StepStatus = { loading: boolean; error: string | null };
@@ -94,6 +95,8 @@ export default function GettingStartedPageClient({ isAuthConfigured }: { isAuthC
     setProvisionState({ loading: false, error: null });
   };
 
+  const SUMMARIZE_BATCH_SIZE = 10;
+
   const handleSummarize = async () => {
     if (!newestSetId) {
       setSummarizeState({ loading: false, error: 'Select documents first.' });
@@ -101,29 +104,59 @@ export default function GettingStartedPageClient({ isAuthConfigured }: { isAuthC
     }
     setSummarizeState({ loading: true, error: null });
     setSummarizeMessage(null);
+
     const setResponse = await fetch(`/api/timeline/selection/read?fileId=${encodeURIComponent(newestSetId)}`);
     if (!setResponse.ok) {
       setSummarizeState({ loading: false, error: await parseErrorMessage(setResponse, 'Could not read your latest selection set.') });
       return;
     }
-    const setPayload = (await setResponse.json()) as { set?: { items?: Array<{ source: 'gmail'|'drive'; id: string }> } };
+
+    const setPayload = (await setResponse.json()) as { set?: { items?: Array<{ source: 'gmail' | 'drive'; id: string }> } };
     const items = setPayload.set?.items ?? [];
+
     if (!items.length) {
       setSummarizeState({ loading: false, error: 'Your latest selection set is empty. Add documents first.' });
       return;
     }
-    const summarizeResponse = await fetch('/api/timeline/summarize', {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items: items.map((item) => ({ source: item.source, id: item.id })) }),
-    });
-    if (!summarizeResponse.ok) {
-      setSummarizeState({ loading: false, error: await parseErrorMessage(summarizeResponse, 'Summarize failed. Open Timeline for more options.') });
-      return;
+
+    const batches = chunkArray(items, SUMMARIZE_BATCH_SIZE);
+    let totalCreated = 0;
+    let totalFailed = 0;
+
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      setSummarizeMessage(
+        batches.length > 1
+          ? `Summarizing batch ${i + 1} of ${batches.length}…`
+          : null
+      );
+
+      const summarizeResponse = await fetch('/api/timeline/summarize', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ items: batch.map((item) => ({ source: item.source, id: item.id })) }),
+      });
+
+      if (!summarizeResponse.ok) {
+        setSummarizeState({
+          loading: false,
+          error: await parseErrorMessage(
+            summarizeResponse,
+            `Summarize failed on batch ${i + 1}. ${totalCreated} summaries created before the error.`
+          ),
+        });
+        return;
+      }
+
+      const summarizePayload = (await summarizeResponse.json()) as { artifacts?: unknown[]; failed?: unknown[] };
+      totalCreated += (summarizePayload.artifacts ?? []).length;
+      totalFailed += (summarizePayload.failed ?? []).length;
     }
-    const summarizePayload = (await summarizeResponse.json()) as { artifacts?: unknown[]; failed?: unknown[] };
-    const created = (summarizePayload.artifacts ?? []).length;
-    const failed = (summarizePayload.failed ?? []).length;
-    setArtifactCount((current) => current + created);
-    setSummarizeMessage(`Summarize complete: ${created} summary(ies) created${failed ? `, ${failed} failed` : ''}.`);
+
+    setArtifactCount((current) => current + totalCreated);
+    setSummarizeMessage(
+      `Summarize complete: ${totalCreated} summary(ies) created${totalFailed ? `, ${totalFailed} failed` : ''}.`
+    );
     setSummarizeState({ loading: false, error: null });
   };
 
