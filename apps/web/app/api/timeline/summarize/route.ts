@@ -262,15 +262,27 @@ export const summarizeTimelineItems = async (
     } catch (error) {
       if (error instanceof ProviderError) {
         if (error.code === 'bad_output') {
-          return {
-            response: summarizeError(502, API_ERROR_CODES.providerBadOutput, 'Provider returned invalid output.'),
-          };
+          const failedSource = isUrlSelection(item) ? 'drive' : item.source;
+          const failedId = isUrlSelection(item) ? item.driveTextFileId : item.id;
+          logWarn(ctx, 'summarize_item_bad_output', { source: failedSource, id: failedId, error: safeError(error) });
+          failed.push({
+            source: failedSource,
+            id: failedId,
+            error: API_ERROR_CODES.providerBadOutput,
+          });
+          continue;
         }
 
         if (error.code === 'not_configured') {
-          return {
-            response: summarizeError(500, API_ERROR_CODES.providerNotConfigured, 'Selected provider is not configured.'),
-          };
+          const failedSource = isUrlSelection(item) ? 'drive' : item.source;
+          const failedId = isUrlSelection(item) ? item.driveTextFileId : item.id;
+          logWarn(ctx, 'summarize_item_provider_not_configured', { source: failedSource, id: failedId, error: safeError(error) });
+          failed.push({
+            source: failedSource,
+            id: failedId,
+            error: API_ERROR_CODES.providerNotConfigured,
+          });
+          continue;
         }
       }
 
