@@ -133,14 +133,154 @@ export default function GettingStartedPageClient({ isAuthConfigured }: { isAuthC
   const step4Status = toStepStatus(hasArtifacts, connected && provisioned && hasSelections);
   const step5Status = toStepStatus(false, hasArtifacts);
 
-  return <section className={styles.page}>
-    <div><h1>Getting Started</h1><p>Connect Google, pick 3 docs, summarize, then ask questions with citations.</p></div>
-    <div className={styles.stepList}>
-      <Card className={styles.stepCard}><div className={styles.stepHeader}><h2 className={styles.stepTitle}>1) Connect Google</h2><Badge tone={getStatusTone(step1Status)}>{step1Status}</Badge></div><p>Sign in and grant Google permissions so Timeline can read selected sources.</p><div className={styles.stepActions}><Link href="/connect" className={styles.linkButton}>{signedIn ? 'Connect' : 'Sign in'}</Link></div>{!isAuthConfigured ? <p className={styles.inlineError}>Google auth is not configured in this environment.</p> : null}</Card>
-      <Card className={styles.stepCard}><div className={styles.stepHeader}><h2 className={styles.stepTitle}>2) Provision Drive folder</h2><Badge tone={getStatusTone(step2Status)}>{step2Status}</Badge></div><p>Create the app folder that stores selection sets and summary artifacts.</p><div className={styles.stepActions}><Button onClick={handleProvision} disabled={!signedIn || provisionState.loading || provisioned}>{provisionState.loading ? 'Provisioning…' : 'Provision folder'}</Button></div>{statusLoading && signedIn ? <Skeleton width="220px" /> : null}{provisionState.error ? <p className={styles.inlineError}>{provisionState.error}</p> : null}{driveFolderId ? <p className={styles.folderMeta}>Folder ID: <code>{driveFolderId}</code> <a href={`https://drive.google.com/drive/folders/${driveFolderId}`} target="_blank" rel="noreferrer" className={styles.secondaryLink}>Open in Drive</a></p> : null}</Card>
-      <Card className={styles.stepCard}><div className={styles.stepHeader}><h2 className={styles.stepTitle}>3) Select 3 documents</h2><Badge tone={getStatusTone(step3Status)}>{step3Status}</Badge></div><p>Pick a small starter set from Drive (and optionally Gmail) to summarize.</p><div className={styles.stepActions}><Link href="/select/drive" className={styles.linkButton}>Select from Drive</Link><Link href="/select/gmail" className={styles.secondaryLink}>Use Gmail selection</Link></div>{statusLoading && signedIn ? <Skeleton width="200px" /> : null}{selectionError ? <p className={styles.inlineError}>{selectionError}</p> : null}{!statusLoading && hasSelections ? <p className={styles.inlineInfo}>Found {selectionSets.length} saved selection set(s).</p> : null}</Card>
-      <Card className={styles.stepCard}><div className={styles.stepHeader}><h2 className={styles.stepTitle}>4) Summarize selection</h2><Badge tone={getStatusTone(step4Status)}>{step4Status}</Badge></div><p>Create timeline-ready summaries from your latest selection set.</p><div className={styles.stepActions}><Button onClick={handleSummarize} disabled={!signedIn || summarizeState.loading || !hasSelections || !provisioned}>{summarizeState.loading ? 'Summarizing…' : 'Summarize now'}</Button><Link href="/timeline?from=getting-started" className={styles.secondaryLink}>Open timeline flow</Link></div>{artifactError ? <p className={styles.inlineError}>{artifactError}</p> : null}{summarizeState.error ? <p className={styles.inlineError}>{summarizeState.error}</p> : null}{summarizeMessage ? <p className={styles.inlineInfo}>{summarizeMessage}</p> : null}</Card>
-      <Card className={styles.stepCard}><div className={styles.stepHeader}><h2 className={styles.stepTitle}>5) Ask a timeline question</h2><Badge tone={getStatusTone(step5Status)}>{step5Status}</Badge></div><p>Use chat to ask questions and get answers with citations from your summaries.</p><div className={styles.stepActions}><Link href={hasArtifacts ? '/timeline/chat' : '#'} className={styles.linkButton} aria-disabled={!hasArtifacts} onClick={(event) => { if (!hasArtifacts) event.preventDefault(); }}>Open chat</Link></div>{!hasArtifacts ? <p className={styles.inlineInfo}>Summarize documents first.</p> : null}</Card>
-    </div>
-  </section>;
+  // Determine which step is the active one (first non-Done step)
+  const stepStatuses = [step1Status, step2Status, step3Status, step4Status, step5Status];
+  const activeStepIndex = stepStatuses.findIndex((s) => s !== 'Done');
+  const allDone = activeStepIndex === -1;
+
+  const stepMeta = [
+    { label: 'Connect Google',        shortLabel: 'Connect' },
+    { label: 'Provision Drive folder', shortLabel: 'Provision' },
+    { label: 'Select documents',       shortLabel: 'Select' },
+    { label: 'Summarize',              shortLabel: 'Summarize' },
+    { label: 'Ask a question',         shortLabel: 'Ask' },
+  ];
+
+  return (
+    <section className={styles.page}>
+      <div>
+        <h1>Getting started</h1>
+        <p>Connect Google, pick 3 docs, summarize, then ask questions with citations.</p>
+      </div>
+
+      {/* Stepper bar */}
+      <div className={styles.stepper} role="list">
+        {stepMeta.map((meta, index) => {
+          const status = stepStatuses[index];
+          const stepClass =
+            status === 'Done'
+              ? styles.stepPillDone
+              : index === activeStepIndex
+                ? styles.stepPillActive
+                : styles.stepPillFuture;
+          return (
+            <React.Fragment key={meta.label}>
+              <div
+                className={`${styles.stepPill} ${stepClass}`}
+                role="listitem"
+                aria-current={index === activeStepIndex ? 'step' : undefined}
+              >
+                <span className={styles.stepPillNum}>{index + 1}</span>
+                <span className={styles.stepPillLabel}>{meta.shortLabel}</span>
+              </div>
+              {index < stepMeta.length - 1 && (
+                <div
+                  className={`${styles.stepConnector} ${status === 'Done' ? styles.stepConnectorDone : ''}`}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {/* Active step detail panel */}
+      {allDone ? (
+        <Card className={styles.detailPanel}>
+          <h2 className={styles.detailTitle}>You&apos;re all set</h2>
+          <p>All steps are complete. Head to Timeline to explore your summaries.</p>
+          <div className={styles.detailActions}>
+            <Link href="/timeline"><Button variant="primary">Open Timeline</Button></Link>
+            <Link href="/timeline/chat"><Button variant="secondary">Open Chat</Button></Link>
+          </div>
+        </Card>
+      ) : activeStepIndex === 0 ? (
+        <Card className={styles.detailPanel}>
+          <div className={styles.detailHeader}>
+            <h2 className={styles.detailTitle}>Connect Google</h2>
+            <Badge tone={getStatusTone(step1Status)}>{step1Status}</Badge>
+          </div>
+          <p>Sign in and grant Google permissions so Timeline can read selected sources.</p>
+          <div className={styles.detailActions}>
+            <Link href="/connect" className={styles.linkButton}>{signedIn ? 'Connect' : 'Sign in'}</Link>
+          </div>
+          {!isAuthConfigured ? <p className={styles.inlineError}>Google auth is not configured in this environment.</p> : null}
+        </Card>
+      ) : activeStepIndex === 1 ? (
+        <Card className={styles.detailPanel}>
+          <div className={styles.detailHeader}>
+            <h2 className={styles.detailTitle}>Provision Drive folder</h2>
+            <Badge tone={getStatusTone(step2Status)}>{step2Status}</Badge>
+          </div>
+          <p>Create the app folder that stores selection sets and summary artifacts.</p>
+          <div className={styles.detailActions}>
+            <Button onClick={handleProvision} disabled={!signedIn || provisionState.loading || provisioned}>
+              {provisionState.loading ? 'Provisioning…' : 'Provision folder'}
+            </Button>
+          </div>
+          {statusLoading && signedIn ? <Skeleton width="220px" /> : null}
+          {provisionState.error ? <p className={styles.inlineError}>{provisionState.error}</p> : null}
+          {driveFolderId ? (
+            <p className={styles.folderMeta}>
+              Folder ID: <code>{driveFolderId}</code>{' '}
+              <a href={`https://drive.google.com/drive/folders/${driveFolderId}`} target="_blank" rel="noreferrer" className={styles.secondaryLink}>
+                Open in Drive
+              </a>
+            </p>
+          ) : null}
+        </Card>
+      ) : activeStepIndex === 2 ? (
+        <Card className={styles.detailPanel}>
+          <div className={styles.detailHeader}>
+            <h2 className={styles.detailTitle}>Select documents</h2>
+            <Badge tone={getStatusTone(step3Status)}>{step3Status}</Badge>
+          </div>
+          <p>Pick a small starter set from Drive (and optionally Gmail) to summarize.</p>
+          <div className={styles.detailActions}>
+            <Link href="/select/drive" className={styles.linkButton}>Select from Drive</Link>
+            <Link href="/select/gmail" className={styles.secondaryLink}>Use Gmail selection</Link>
+          </div>
+          {statusLoading && signedIn ? <Skeleton width="200px" /> : null}
+          {selectionError ? <p className={styles.inlineError}>{selectionError}</p> : null}
+          {!statusLoading && hasSelections ? <p className={styles.inlineInfo}>Found {selectionSets.length} saved selection set(s).</p> : null}
+        </Card>
+      ) : activeStepIndex === 3 ? (
+        <Card className={styles.detailPanel}>
+          <div className={styles.detailHeader}>
+            <h2 className={styles.detailTitle}>Summarize selection</h2>
+            <Badge tone={getStatusTone(step4Status)}>{step4Status}</Badge>
+          </div>
+          <p>Create timeline-ready summaries from your latest selection set.</p>
+          <div className={styles.detailActions}>
+            <Button onClick={handleSummarize} disabled={!signedIn || summarizeState.loading || !hasSelections || !provisioned}>
+              {summarizeState.loading ? 'Summarizing…' : 'Summarize now'}
+            </Button>
+            <Link href="/timeline?from=getting-started" className={styles.secondaryLink}>Open timeline flow</Link>
+          </div>
+          {artifactError ? <p className={styles.inlineError}>{artifactError}</p> : null}
+          {summarizeState.error ? <p className={styles.inlineError}>{summarizeState.error}</p> : null}
+          {summarizeMessage ? <p className={styles.inlineInfo}>{summarizeMessage}</p> : null}
+        </Card>
+      ) : (
+        <Card className={styles.detailPanel}>
+          <div className={styles.detailHeader}>
+            <h2 className={styles.detailTitle}>Ask a timeline question</h2>
+            <Badge tone={getStatusTone(step5Status)}>{step5Status}</Badge>
+          </div>
+          <p>Use chat to ask questions and get answers with citations from your summaries.</p>
+          <div className={styles.detailActions}>
+            <Link
+              href={hasArtifacts ? '/timeline/chat' : '#'}
+              className={styles.linkButton}
+              aria-disabled={!hasArtifacts}
+              onClick={(event) => { if (!hasArtifacts) event.preventDefault(); }}
+            >
+              Open chat
+            </Link>
+          </div>
+          {!hasArtifacts ? <p className={styles.inlineInfo}>Summarize documents first.</p> : null}
+        </Card>
+      )}
+    </section>
+  );
+
 }

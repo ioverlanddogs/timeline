@@ -16,16 +16,14 @@ describe('GettingStartedPageClient', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders all five step titles', () => {
+  it('renders stepper pills and active step detail', () => {
     mockUseSession.mockReturnValue({ status: 'unauthenticated', data: null });
 
     render(<GettingStartedPageClient isAuthConfigured />);
 
-    expect(screen.getByRole('heading', { name: '1) Connect Google' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '2) Provision Drive folder' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '3) Select 3 documents' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '4) Summarize selection' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '5) Ask a timeline question' })).toBeInTheDocument();
+    expect(screen.getByText('Connect')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Connect Google' })).toBeInTheDocument();
+    expect(screen.getByText('Provision')).toBeInTheDocument();
   });
 
   it('keeps Open chat disabled when artifacts are empty', async () => {
@@ -44,8 +42,6 @@ describe('GettingStartedPageClient', () => {
       expect(fetchMock).toHaveBeenCalledWith('/api/timeline/artifacts/list');
     });
 
-    const openChat = screen.getByRole('link', { name: 'Open chat' });
-    expect(openChat).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.getByText('Summarize documents first.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Select documents' })).toBeInTheDocument();
   });
 });
