@@ -105,7 +105,16 @@ export default function AdminSettingsForm() {
         return;
       }
       const payload = (await response.json()) as { settings: AdminSettings };
-      setSettings(normalizeAdminSettings(payload.settings) ?? defaultSettings);
+      const loaded = normalizeAdminSettings(payload.settings) ?? defaultSettings;
+      setSettings({
+        ...loaded,
+        prompts: {
+          system: loaded.prompts.system || DEFAULT_ADMIN_SETTINGS.prompts.system,
+          chatPromptTemplate: loaded.prompts.chatPromptTemplate || '',
+          summarizePromptTemplate: loaded.prompts.summarizePromptTemplate || DEFAULT_ADMIN_SETTINGS.prompts.summarizePromptTemplate,
+          highlightsPromptTemplate: loaded.prompts.highlightsPromptTemplate || DEFAULT_ADMIN_SETTINGS.prompts.highlightsPromptTemplate,
+        },
+      });
       setStatus('ready');
     } catch (error) {
       setStatus('error');
@@ -263,10 +272,73 @@ export default function AdminSettingsForm() {
       ))}
 
       <h3>Prompts</h3>
-      <label className={styles.field}><span>System prompt</span><textarea rows={5} value={settings.prompts.system} onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, system: event.target.value } })} /></label>
-      <label className={styles.field}><span>Chat prompt template (optional)</span><textarea rows={4} value={settings.prompts.chatPromptTemplate ?? ''} onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, chatPromptTemplate: event.target.value } })} /></label>
-      <label className={styles.field}><span>Summarize prompt template (optional)</span><textarea rows={4} value={settings.prompts.summarizePromptTemplate ?? ''} onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, summarizePromptTemplate: event.target.value } })} /></label>
-      <label className={styles.field}><span>Highlights prompt template (optional)</span><textarea rows={4} value={settings.prompts.highlightsPromptTemplate ?? ''} onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, highlightsPromptTemplate: event.target.value } })} /></label>
+
+      <div className={styles.field}>
+        <span>System prompt</span>
+        <textarea
+          rows={5}
+          value={settings.prompts.system}
+          placeholder={DEFAULT_ADMIN_SETTINGS.prompts.system}
+          onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, system: event.target.value } })}
+        />
+        {settings.prompts.system !== DEFAULT_ADMIN_SETTINGS.prompts.system ? (
+          <button
+            type="button"
+            className={styles.resetButton}
+            onClick={() => updateSettings({ ...settings, prompts: { ...settings.prompts, system: DEFAULT_ADMIN_SETTINGS.prompts.system } })}
+          >
+            Reset to default
+          </button>
+        ) : null}
+      </div>
+
+      <div className={styles.field}>
+        <span>Chat prompt template <span className={styles.optionalLabel}>(optional — leave blank to use system prompt)</span></span>
+        <textarea
+          rows={4}
+          value={settings.prompts.chatPromptTemplate ?? ''}
+          placeholder="Leave blank to use the system prompt for chat."
+          onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, chatPromptTemplate: event.target.value } })}
+        />
+      </div>
+
+      <div className={styles.field}>
+        <span>Summarize prompt template <span className={styles.optionalLabel}>(optional)</span></span>
+        <textarea
+          rows={4}
+          value={settings.prompts.summarizePromptTemplate ?? ''}
+          placeholder={DEFAULT_ADMIN_SETTINGS.prompts.summarizePromptTemplate}
+          onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, summarizePromptTemplate: event.target.value } })}
+        />
+        {settings.prompts.summarizePromptTemplate !== DEFAULT_ADMIN_SETTINGS.prompts.summarizePromptTemplate ? (
+          <button
+            type="button"
+            className={styles.resetButton}
+            onClick={() => updateSettings({ ...settings, prompts: { ...settings.prompts, summarizePromptTemplate: DEFAULT_ADMIN_SETTINGS.prompts.summarizePromptTemplate } })}
+          >
+            Reset to default
+          </button>
+        ) : null}
+      </div>
+
+      <div className={styles.field}>
+        <span>Highlights prompt template <span className={styles.optionalLabel}>(optional)</span></span>
+        <textarea
+          rows={3}
+          value={settings.prompts.highlightsPromptTemplate ?? ''}
+          placeholder={DEFAULT_ADMIN_SETTINGS.prompts.highlightsPromptTemplate}
+          onChange={(event) => updateSettings({ ...settings, prompts: { ...settings.prompts, highlightsPromptTemplate: event.target.value } })}
+        />
+        {settings.prompts.highlightsPromptTemplate !== DEFAULT_ADMIN_SETTINGS.prompts.highlightsPromptTemplate ? (
+          <button
+            type="button"
+            className={styles.resetButton}
+            onClick={() => updateSettings({ ...settings, prompts: { ...settings.prompts, highlightsPromptTemplate: DEFAULT_ADMIN_SETTINGS.prompts.highlightsPromptTemplate } })}
+          >
+            Reset to default
+          </button>
+        ) : null}
+      </div>
 
       <label className={styles.field}><span>Safety mode</span><select value={settings.safety.mode} onChange={(event) => updateSettings({ ...settings, safety: { mode: event.target.value as AdminSettings['safety']['mode'] } })}><option value="standard">standard</option><option value="strict">strict</option></select></label>
 
