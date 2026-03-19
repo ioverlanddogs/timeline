@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "buildCommand": "pnpm run vercel:build",
-  "installCommand": "pnpm run vercel:install",
+  "nodeVersion": "20.x",
+  "buildCommand": "pnpm -w run vercel:build",
+  "installCommand": "pnpm -w run vercel:install",
   "framework": "nextjs",
   "headers": [
     {
