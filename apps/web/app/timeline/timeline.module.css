@@ -651,3 +651,57 @@
 }
 
 .clickableItem { cursor: pointer; }
+
+.failedPanel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--danger-bg);
+}
+
+.failedSummary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--danger);
+  font-weight: 600;
+  list-style: none;
+  user-select: none;
+}
+
+.failedSummary::-webkit-details-marker {
+  display: none;
+}
+
+.failedList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.failedItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.failedReason {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.failedHint {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.failedId {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-family: monospace;
+  word-break: break-all;
+  margin-top: 2px;
+}

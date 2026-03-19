@@ -84,6 +84,52 @@ type FailedItem = {
   error: string;
 };
 
+const getFailedItemLabel = (item: FailedItem): { reason: string; hint: string } => {
+  const err = item.error ?? '';
+  if (err.startsWith('unsupported_content_type')) {
+    const mimeMatch = err.match(/MIME type (.+)/);
+    const mime = mimeMatch?.[1] ?? 'this file type';
+    return {
+      reason: `Unsupported file type (${mime})`,
+      hint: 'Open in Drive, export to Google Docs format, then re-select.',
+    };
+  }
+  if (err.includes('provider_bad_output')) {
+    return {
+      reason: 'AI returned an unexpected response',
+      hint: 'Try summarising this item again.',
+    };
+  }
+  if (err.includes('provider_not_configured')) {
+    return {
+      reason: 'AI provider not configured',
+      hint: 'Go to Admin → Settings and set a provider.',
+    };
+  }
+  if (err.includes('too_large') || err.includes('PayloadLimit')) {
+    return {
+      reason: 'File too large to store',
+      hint: 'Select a smaller document or export a section of it.',
+    };
+  }
+  if (err.includes('upstream_timeout') || err.includes('timeout')) {
+    return {
+      reason: 'Request timed out',
+      hint: 'Google Drive was slow to respond — try again.',
+    };
+  }
+  if (err.includes('insufficient_text')) {
+    return {
+      reason: 'Not enough text to summarise',
+      hint: 'This file may be empty, an image, or a scanned PDF without OCR text.',
+    };
+  }
+  return {
+    reason: 'Summarise failed',
+    hint: 'Try again, or check the file is accessible in Drive.',
+  };
+};
+
 type SelectionSetSummary = {
   driveFileId: string;
   name: string;
@@ -2364,16 +2410,23 @@ export default function TimelinePageClient() {
         </div>
       ) : null}
       {failedItems.length > 0 ? (
-        <div className={styles.notice}>
-          Some items failed to summarize:
-          <ul>
-            {failedItems.map((item) => (
-              <li key={`${item.source}-${item.id}`}>
-                {item.source}:{item.id}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <details className={styles.failedPanel}>
+          <summary className={styles.failedSummary}>
+            {failedItems.length} item{failedItems.length !== 1 ? 's' : ''} could not be summarised — click to see details
+          </summary>
+          <div className={styles.failedList}>
+            {failedItems.map((item) => {
+              const { reason, hint } = getFailedItemLabel(item);
+              return (
+                <div key={`${item.source}-${item.id}`} className={styles.failedItem}>
+                  <span className={styles.failedReason}>{reason}</span>
+                  <span className={styles.failedHint}>{hint}</span>
+                  <span className={styles.failedId}>{item.source}:{item.id}</span>
+                </div>
+              );
+            })}
+          </div>
+        </details>
       ) : null}
       {syncError === 'reconnect_required' ? syncReconnectNotice(syncRequestId) : null}
       {syncError === 'drive_not_provisioned' ? syncProvisionNotice(syncRequestId) : null}
