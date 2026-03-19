@@ -205,7 +205,7 @@ export default function TimelineSynthesizePageClient() {
         <Link href="/timeline">Back to timeline</Link>
       </div>
 
-      {error ? <p style={{ color: '#b00020' }}>{error}</p> : null}
+      {error ? <p style={{ color: 'var(--danger)' }}>{error}</p> : null}
 
       {result ? (
         <article style={{ marginTop: 20 }}>
@@ -253,7 +253,7 @@ export default function TimelineSynthesizePageClient() {
                           {isClosed ? 'Reopen' : 'Mark closed'}
                         </button>
                       ) : null}
-                      {loopErrors[key] ? <span style={{ color: '#b00020' }}> {loopErrors[key]}</span> : null}
+                      {loopErrors[key] ? <span style={{ color: 'var(--danger)' }}> {loopErrors[key]}</span> : null}
                     </li>
                   );
                 })}
