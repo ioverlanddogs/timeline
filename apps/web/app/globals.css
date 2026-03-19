@@ -73,28 +73,170 @@ textarea {
 
 .app-nav {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  font-size: 0.95rem;
+  gap: 2px;
+  align-items: center;
+  font-size: 0.9rem;
+  flex-wrap: nowrap;
+}
+
+.nav-spacer {
+  flex: 1;
+}
+
+/* Top-level links (no dropdown) */
+.app-nav > a {
+  padding: 6px 10px;
+  border-radius: 8px;
   color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 
-.app-nav a {
-  padding: 6px 12px;
-  border-radius: 999px;
-  transition: all 0.2s ease;
-}
-
-.app-nav a:hover,
-.app-nav a:focus-visible {
+.app-nav > a:hover,
+.app-nav > a:focus-visible {
   background: var(--background);
   color: var(--text);
 }
 
-.app-nav a[data-active='true'] {
+.app-nav > a[data-active='true'] {
   background: var(--background);
   color: var(--text);
+  font-weight: 500;
+}
+
+/* Dropdown wrapper */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown > summary {
+  list-style: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-dropdown > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-dropdown > summary:hover,
+.nav-dropdown[open] > summary {
+  background: var(--background);
+  color: var(--text);
+}
+
+.nav-dropdown > summary[data-active='true'],
+.nav-dropdown[open] > summary[data-active='true'] {
+  background: var(--background);
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Dropdown panel */
+.nav-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 192px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  z-index: 50;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nav-dropdown-panel--right {
+  left: auto;
+  right: 0;
+}
+
+.nav-dropdown-panel > a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--text);
+  transition: background 0.15s ease;
+}
+
+.nav-dropdown-panel > a:hover {
+  background: var(--background);
+}
+
+/* Avatar chip */
+.nav-avatar {
+  list-style: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--background);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
   font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease;
+}
+
+.nav-avatar::-webkit-details-marker {
+  display: none;
+}
+
+.nav-avatar:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* User email label inside avatar dropdown */
+.nav-user-email {
+  display: block;
+  padding: 6px 10px 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+/* Sign out button inside avatar dropdown */
+.nav-signout {
+  display: block;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--danger);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+  font: inherit;
+}
+
+.nav-signout:hover {
+  background: var(--background);
+}
+
+/* Close dropdown when focus leaves */
+.nav-dropdown:not(:focus-within) > summary ~ .nav-dropdown-panel {
+  /* relies on [open] toggling — no extra CSS needed */
 }
 
 .app-main {
@@ -145,6 +287,20 @@ section {
   .app-header__content {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .app-nav {
+    gap: 0;
+    flex-wrap: wrap;
+  }
+
+  .nav-dropdown-panel {
+    position: static;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    padding: 0 0 4px 10px;
+    background: transparent;
   }
 
   .app-main {
