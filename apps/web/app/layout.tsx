@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import './globals.css';
 import AppNav from './components/AppNav';
 import AppSessionProvider from './components/SessionProvider';
+
+export const metadata: Metadata = {
+  title: { default: 'Timeline', template: '%s | Timeline' },
+  description: 'A privacy-first timeline built on your Google Drive.',
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

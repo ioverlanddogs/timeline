@@ -116,8 +116,8 @@
 
 .dangerButton:hover:not(:disabled),
 .dangerButton:focus-visible:not(:disabled) {
-  background: #b91c1c;
-  border-color: #b91c1c;
+  background: var(--danger);
+  border-color: var(--danger);
   color: white;
 }
 

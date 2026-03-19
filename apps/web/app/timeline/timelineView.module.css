@@ -13,12 +13,12 @@
 .groupHeader {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text);
 }
 
 .undatedHelp {
   margin: 0;
-  color: #6b7280;
+  color: var(--muted);
   font-size: 0.85rem;
 }
 
@@ -27,7 +27,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding-left: 0.75rem;
-  border-left: 2px solid #e5e7eb;
+  border-left: 2px solid var(--border);
 }
 
 .item {
@@ -56,7 +56,7 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .emptyState {

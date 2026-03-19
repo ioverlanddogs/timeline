@@ -24,7 +24,7 @@
 
 .section {
   margin-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border);
   padding-top: 1rem;
   display: grid;
   gap: 0.5rem;
@@ -38,7 +38,7 @@
 
 .linkButton {
   padding: 0.4rem 0.7rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
 }
 
@@ -56,24 +56,24 @@
 }
 
 .chip {
-  background: #f3f4f6;
+  background: var(--background);
 }
 
 .chipUser {
-  background: #dbeafe;
+  background: var(--primary-bg);
 }
 
 .error {
-  color: #b91c1c;
+  color: var(--danger);
 }
 
 .saved {
-  color: #166534;
+  color: var(--success);
 }
 
 .timestamp,
 .subhead {
-  color: #4b5563;
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
