@@ -3,7 +3,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Button from './ui/Button';
-import Card from './ui/Card';
 import Skeleton from './ui/Skeleton';
 import { parseApiError } from '../lib/apiErrors';
 import { fetchWithTimeout } from '../lib/fetchWithTimeout';
@@ -55,6 +54,8 @@ export default function HomeClient() {
     count: 0,
     status: 'loading',
   });
+  const [recentArtifacts, setRecentArtifacts] = useState<SummaryArtifact[]>([]);
+  const [openLoopCount, setOpenLoopCount] = useState(0);
   const [lastSyncISO, setLastSyncISO] = useState<string | null>(null);
   const showConnectCta =
     calendarMetric.status === 'needs-connect' || timelineMetric.status === 'needs-connect';
@@ -94,8 +95,15 @@ export default function HomeClient() {
           ? timelineData.artifacts.filter(isSummaryArtifact).map(normalizeArtifact)
           : [];
         setTimelineMetric({ count: artifacts.length, status: 'ready' });
+        const sorted = [...artifacts].sort((a, b) =>
+          (b.createdAtISO ?? '').localeCompare(a.createdAtISO ?? ''),
+        );
+        setRecentArtifacts(sorted.slice(0, 3));
+        setOpenLoopCount(artifacts.filter((a) => (a.openLoops?.length ?? 0) > 0).length);
       } else if (timelineResponse.status === 401 || timelineResponse.status === 503) {
         setTimelineMetric({ count: 0, status: 'needs-connect' });
+        setRecentArtifacts([]);
+        setOpenLoopCount(0);
       } else {
         const apiError = await parseApiError(timelineResponse);
         setTimelineMetric({
@@ -103,6 +111,8 @@ export default function HomeClient() {
           status: 'error',
           message: apiError?.message ?? 'Unable to load timeline summaries.',
         });
+        setRecentArtifacts([]);
+        setOpenLoopCount(0);
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
@@ -118,6 +128,8 @@ export default function HomeClient() {
         status: 'error',
         message: 'Unable to load summary data. Please try again.',
       });
+      setRecentArtifacts([]);
+      setOpenLoopCount(0);
     } finally {
     }
   }, []);
@@ -136,60 +148,121 @@ export default function HomeClient() {
   }, []);
 
   return (
-    <div className={styles.summaryGrid}>
-      <Card>
-        <h2>Overview</h2>
-        <p>
-          Connect your accounts, select Gmail or Drive content, and explore the Timeline and Calendar
-          views. Summaries are stored as Drive-backed artifacts so the experience stays portable.
-        </p>
-        {showConnectCta ? (
-          <Button type="button" onClick={() => window.location.assign('/connect')}>
-            Connect to get started
+    <div className={styles.dashboard}>
+      {/* Metric row */}
+      <div className={styles.metricRow}>
+        <div className={styles.metricCard}>
+          {timelineMetric.status === 'loading' ? (
+            <Skeleton height="28px" width="48px" />
+          ) : (
+            <p className={styles.metricNum}>{timelineMetric.count}</p>
+          )}
+          <p className={styles.metricLbl}>Summaries generated</p>
+        </div>
+        <div className={styles.metricCard}>
+          {timelineMetric.status === 'loading' ? (
+            <Skeleton height="28px" width="48px" />
+          ) : (
+            <p className={styles.metricNum}>{openLoopCount}</p>
+          )}
+          <p className={styles.metricLbl}>Open loops</p>
+        </div>
+        <div className={styles.metricCard}>
+          {calendarMetric.status === 'loading' ? (
+            <Skeleton height="28px" width="48px" />
+          ) : (
+            <p className={styles.metricNum}>{calendarMetric.count}</p>
+          )}
+          <p className={styles.metricLbl}>Calendar entries</p>
+        </div>
+        <div className={styles.metricCard}>
+          <p className={styles.metricNum}>{lastSyncLabel}</p>
+          <p className={styles.metricLbl}>Last sync</p>
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className={styles.quickActions}>
+        <a href="/select/drive" className={styles.qaCard}>
+          <div className={`${styles.qaIcon} ${styles.qaIconBlue}`}>+</div>
+          <div>
+            <p className={styles.qaTitle}>Select documents</p>
+            <p className={styles.qaSub}>Browse Drive or Gmail</p>
+          </div>
+        </a>
+        <a href="/timeline" className={styles.qaCard}>
+          <div className={`${styles.qaIcon} ${styles.qaIconTeal}`}>&#9654;</div>
+          <div>
+            <p className={styles.qaTitle}>View timeline</p>
+            <p className={styles.qaSub}>
+              {timelineMetric.count > 0
+                ? `${timelineMetric.count} summaries ready`
+                : 'Summarise your selections'}
+            </p>
+          </div>
+        </a>
+        <a href="/timeline/chat" className={styles.qaCard}>
+          <div className={`${styles.qaIcon} ${styles.qaIconAmber}`}>?</div>
+          <div>
+            <p className={styles.qaTitle}>Ask a question</p>
+            <p className={styles.qaSub}>Search your timeline</p>
+          </div>
+        </a>
+      </div>
+
+      {/* Recent summaries */}
+      {recentArtifacts.length > 0 ? (
+        <div>
+          <p className={styles.recentLabel}>Recent summaries</p>
+          {recentArtifacts.map((artifact) => {
+            const dateLabel = artifact.contentDateISO ?? artifact.createdAtISO
+              ? new Date(artifact.contentDateISO ?? artifact.createdAtISO ?? '').toLocaleDateString(
+                  'en-GB',
+                  { day: 'numeric', month: 'short' },
+                )
+              : null;
+            return (
+              <div key={artifact.artifactId} className={styles.recentItem}>
+                <span
+                  className={`${styles.sourceDot} ${artifact.source === 'gmail' ? styles.dotGmail : styles.dotDrive}`}
+                />
+                <span className={styles.recentTitle}>{artifact.title}</span>
+                {(artifact.openLoops?.length ?? 0) > 0 ? (
+                  <span className={styles.recentBadgeWarn}>Open loop</span>
+                ) : (
+                  <span className={styles.recentBadgeDone}>Summarised</span>
+                )}
+                {dateLabel ? <span className={styles.recentDate}>{dateLabel}</span> : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {/* Connect CTA — keep existing behaviour */}
+      {showConnectCta ? (
+        <Button type="button" onClick={() => window.location.assign('/connect')}>
+          Connect to get started
+        </Button>
+      ) : null}
+
+      {/* Error states — keep existing behaviour */}
+      {calendarMetric.status === 'error' ? (
+        <div className={styles.inlineError}>
+          <p>{calendarMetric.message}</p>
+          <Button type="button" variant="secondary" onClick={() => loadSummary()}>
+            Retry
           </Button>
-        ) : null}
-      </Card>
-      <Card>
-        <h2>Calendar entries</h2>
-        {calendarMetric.status === 'loading' ? (
-          <Skeleton height="24px" width="80px" />
-        ) : calendarMetric.status === 'needs-connect' ? (
-          <p className={styles.metricValue}>Connect to view</p>
-        ) : calendarMetric.status === 'error' ? (
-          <div className={styles.inlineError}>
-            <p>{calendarMetric.message}</p>
-            <Button type="button" variant="secondary" onClick={() => loadSummary()}>
-              Retry
-            </Button>
-          </div>
-        ) : (
-          <p className={styles.metricValue}>{calendarMetric.count}</p>
-        )}
-        <p className={styles.metricLabel}>Scheduled sessions from your connected calendar.</p>
-      </Card>
-      <Card>
-        <h2>Timeline summaries</h2>
-        {timelineMetric.status === 'loading' ? (
-          <Skeleton height="24px" width="80px" />
-        ) : timelineMetric.status === 'needs-connect' ? (
-          <p className={styles.metricValue}>Connect to view</p>
-        ) : timelineMetric.status === 'error' ? (
-          <div className={styles.inlineError}>
-            <p>{timelineMetric.message}</p>
-            <Button type="button" variant="secondary" onClick={() => loadSummary()}>
-              Retry
-            </Button>
-          </div>
-        ) : (
-          <p className={styles.metricValue}>{timelineMetric.count}</p>
-        )}
-        <p className={styles.metricLabel}>Summaries generated from your Drive-backed artifacts.</p>
-      </Card>
-      <Card>
-        <h2>Last sync</h2>
-        <p className={styles.metricValue}>{lastSyncLabel}</p>
-        <p className={styles.metricLabel}>Most recent sync for the Timeline workspace.</p>
-      </Card>
+        </div>
+      ) : null}
+      {timelineMetric.status === 'error' ? (
+        <div className={styles.inlineError}>
+          <p>{timelineMetric.message}</p>
+          <Button type="button" variant="secondary" onClick={() => loadSummary()}>
+            Retry
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
