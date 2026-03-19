@@ -123,7 +123,7 @@ describe('POST /api/timeline/summarize', () => {
     await expect(response.json()).resolves.toMatchObject({ error: 'provider_not_configured', error_code: 'provider_not_configured' });
   });
 
-  it('records provider_bad_output as an item failure when provider output is malformed', async () => {
+  it('records bad output as an item failure when provider output is malformed', async () => {
     mockGetGoogleSession.mockResolvedValue({ driveFolderId: 'folder-1' } as never);
     mockGetGoogleAccessToken.mockResolvedValue('token');
     mockCreateDriveClient.mockReturnValue({} as never);
@@ -153,7 +153,7 @@ describe('POST /api/timeline/summarize', () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       artifacts: [],
-      failed: [{ source: 'gmail', id: 'id-1', error: 'provider_bad_output' }],
+      failed: [{ source: 'gmail', id: 'id-1', error: 'bad output' }],
     });
   });
 

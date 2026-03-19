@@ -189,6 +189,16 @@ export const summarizeTimelineItems = async (
   for (const item of items) {
     try {
       const resolved = await resolveSourceContent(drive, gmail, item, driveFolderId);
+      if (resolved.text.startsWith('Unsupported for text extraction')) {
+        const failedSource = isUrlSelection(item) ? 'drive' : (item as Exclude<SummarizeItem, UrlSelection>).source;
+        const failedId = isUrlSelection(item) ? item.driveTextFileId : (item as Exclude<SummarizeItem, UrlSelection>).id;
+        failed.push({
+          source: failedSource,
+          id: failedId,
+          error: `unsupported_content_type: ${resolved.text.split('\n')[2] ?? 'unsupported mime type'}`,
+        });
+        continue;
+      }
       const summarizeRouting = settings.routing.tasks?.summarize ?? settings.routing.default;
       const summarizeSettings = {
         ...settings,
@@ -261,18 +271,6 @@ export const summarizeTimelineItems = async (
       }
     } catch (error) {
       if (error instanceof ProviderError) {
-        if (error.code === 'bad_output') {
-          const failedSource = isUrlSelection(item) ? 'drive' : item.source;
-          const failedId = isUrlSelection(item) ? item.driveTextFileId : item.id;
-          logWarn(ctx, 'summarize_item_bad_output', { source: failedSource, id: failedId, error: safeError(error) });
-          failed.push({
-            source: failedSource,
-            id: failedId,
-            error: API_ERROR_CODES.providerBadOutput,
-          });
-          continue;
-        }
-
         if (error.code === 'not_configured') {
           const failedSource = isUrlSelection(item) ? 'drive' : item.source;
           const failedId = isUrlSelection(item) ? item.driveTextFileId : item.id;
