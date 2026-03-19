@@ -62,7 +62,7 @@
 }
 
 .confirmBox {
-  border: 1px solid #dbeafe;
+  border: 1px solid var(--border);
   background: #f8fbff;
   border-radius: 10px;
   padding: 10px;
@@ -95,7 +95,7 @@
 .notice {
   border: 1px solid #bfdbfe;
   background: #eff6ff;
-  color: #1e3a8a;
+  color: var(--primary-dark);
   border-radius: 8px;
   padding: 8px 10px;
 }

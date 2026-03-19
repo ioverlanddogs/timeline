@@ -68,7 +68,7 @@ export default function CitationChips({ citations }: { citations: Citation[] }) 
           title={chip.preview}
           onClick={() => router.push(`/timeline?artifactId=${encodeURIComponent(chip.artifactId)}`)}
           style={{
-            border: '1px solid #d1d5db',
+            border: '1px solid var(--border)',
             borderRadius: 999,
             background: '#f8fafc',
             padding: '8px 12px',

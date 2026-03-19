@@ -13,7 +13,7 @@
 
 .neutral {
   background: #eef1f7;
-  color: #4b5563;
+  color: var(--muted);
 }
 
 .accent {

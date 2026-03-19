@@ -52,11 +52,11 @@
 }
 
 .count {
-  color: var(--text-muted, #6b7280);
+  color: var(--muted);
 }
 
 .empty {
-  color: var(--text-muted, #6b7280);
+  color: var(--muted);
   margin: 0.4rem 0 0;
 }
 
