@@ -39,10 +39,16 @@ export default function TimelineView({ artifacts, highlightedArtifactId, onSelec
   if (!artifacts.length) {
     return (
       <Card className={styles.emptyState}>
-        <h2>No summaries yet.</h2>
-        <Link href="/select/drive">
-          <Button variant="secondary">Select documents</Button>
-        </Link>
+        <h2>No summaries yet</h2>
+        <p>Select a few documents from Drive or Gmail, then summarise them to build your timeline.</p>
+        <div className={styles.emptyActions}>
+          <Link href="/select/drive">
+            <Button variant="primary">Select from Drive</Button>
+          </Link>
+          <Link href="/getting-started">
+            <Button variant="secondary">View setup guide</Button>
+          </Link>
+        </div>
       </Card>
     );
   }
@@ -70,38 +76,52 @@ export default function TimelineView({ artifacts, highlightedArtifactId, onSelec
               const isHighlighted =
                 highlightedArtifactId === artifact.driveFileId ||
                 highlightedArtifactId === artifact.artifactId;
+              const entryDate = artifact.contentDateISO ? new Date(artifact.contentDateISO) : null;
+              const dayNum = entryDate ? entryDate.getDate() : null;
+              const weekday = entryDate
+                ? entryDate.toLocaleDateString('en-GB', { weekday: 'short' })
+                : null;
 
               return (
-                <Card
-                  key={artifact.artifactId}
-                  className={`${styles.item} ${isHighlighted ? styles.highlighted : ''}`.trim()}
-                  data-entry-key={entryKey}
-                  data-artifact-id={artifact.driveFileId}
-                  onClick={(event) => {
-                    const target = event.target as HTMLElement;
-                    if (target.closest('a,button,input,textarea,select')) {
-                      return;
-                    }
-                    onSelectArtifact?.(artifact.driveFileId);
-                  }}
-                >
-                  <h4 className={styles.itemTitle}>{title}</h4>
-                  <ul className={styles.bullets}>
-                    {bullets.map((line, index) => (
-                      <li key={`${artifact.artifactId}-line-${index}`}>{line}</li>
-                    ))}
-                  </ul>
-                  <div className={styles.metaRow}>
-                    <span>{sourceTypeLabel(artifact)}</span>
-                    {people ? <span>• {people}</span> : null}
-                    {location ? <span>• {location}</span> : null}
-                    {amount ? <span>• {amount}</span> : null}
-                    <a href={externalLink} target="_blank" rel="noreferrer">
-                      View source
-                    </a>
-                    <Link href={internalLink}>Jump to summary</Link>
+                <div key={artifact.artifactId} className={styles.entry}>
+                  <div className={styles.entryDate}>
+                    {dayNum ? (
+                      <span className={styles.entryDay}>{dayNum}</span>
+                    ) : (
+                      <span className={styles.entryDayBlank}>—</span>
+                    )}
+                    {weekday ? <span className={styles.entryWeekday}>{weekday}</span> : null}
                   </div>
-                </Card>
+                  <Card
+                    className={`${styles.item} ${isHighlighted ? styles.highlighted : ''}`.trim()}
+                    data-entry-key={entryKey}
+                    data-artifact-id={artifact.driveFileId}
+                    onClick={(event) => {
+                      const target = event.target as HTMLElement;
+                      if (target.closest('a,button,input,textarea,select')) {
+                        return;
+                      }
+                      onSelectArtifact?.(artifact.driveFileId);
+                    }}
+                  >
+                    <h4 className={styles.itemTitle}>{title}</h4>
+                    <ul className={styles.bullets}>
+                      {bullets.map((line, index) => (
+                        <li key={`${artifact.artifactId}-line-${index}`}>{line}</li>
+                      ))}
+                    </ul>
+                    <div className={styles.metaRow}>
+                      <span>{sourceTypeLabel(artifact)}</span>
+                      {people ? <span>• {people}</span> : null}
+                      {location ? <span>• {location}</span> : null}
+                      {amount ? <span>• {amount}</span> : null}
+                      <a href={externalLink} target="_blank" rel="noreferrer">
+                        View source
+                      </a>
+                      <Link href={internalLink}>Jump to summary</Link>
+                    </div>
+                  </Card>
+                </div>
               );
             })}
           </div>
