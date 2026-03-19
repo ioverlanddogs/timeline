@@ -76,8 +76,8 @@ describe('TimelineView', () => {
   it('renders empty state when no artifacts', () => {
     render(<TimelineView artifacts={[]} />);
 
-    expect(screen.getByText('No summaries yet.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Select documents' })).toHaveAttribute(
+    expect(screen.getByText('No summaries yet')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Select from Drive' })).toHaveAttribute(
       'href',
       '/select/drive',
     );

@@ -4,7 +4,9 @@ import React from 'react';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 
+import Button from '../../components/ui/Button';
 import CitationChips, { toUniqueCitationChips } from './CitationChips';
+import styles from './chat.module.css';
 
 type Citation = {
   artifactId: string;
@@ -64,67 +66,85 @@ export default function TimelineChatPageClient() {
   const showNoMatches = Boolean(answer && citations.length === 0 && usedArtifactIds.length === 0);
 
   return (
-    <section style={{ maxWidth: 900, margin: '0 auto', padding: '1.5rem' }}>
-      <h1>Timeline Chat</h1>
-      <p>Ask grounded questions over Drive-backed timeline summary artifacts.</p>
-      <textarea
-        style={{ width: '100%', minHeight: 120, padding: 10 }}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Ask a question about your timeline..."
-      />
-      <div style={{ marginTop: 10, display: 'flex', gap: 10 }}>
-        <button onClick={() => void send()} disabled={loading}>
-          {loading ? 'Sending...' : 'Send'}
-        </button>
-        <Link href="/timeline">Back to Timeline</Link>
-      </div>
+    <section className={styles.chatPage}>
+      <div className={styles.chatMain}>
+        <div className={styles.messages}>
+          {!answer && !loading && <p className={styles.emptyHint}>Ask a question about your timeline…</p>}
 
-      {error ? <p style={{ color: 'var(--danger)' }}>{error}</p> : null}
-      {answer ? (
-        <article style={{ marginTop: 20 }}>
-          <h2>Answer</h2>
-          {groundedResponse ? (
-            <p
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                background: '#eff6ff',
-                color: 'var(--primary-dark)',
-                border: '1px solid #bfdbfe',
-                borderRadius: 8,
-                padding: '6px 10px',
-                margin: '0 0 10px',
-              }}
-            >
-              <span aria-hidden="true">ℹ️</span>
-              Grounded in {uniqueCitationCount} timeline artifacts
-            </p>
-          ) : null}
-          <p>{answer}</p>
-          {showNoMatches ? (
-            <div
-              style={{
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                background: '#f9fafb',
-                padding: 12,
-                marginTop: 12,
-              }}
-            >
-              <p style={{ marginTop: 0 }}>No timeline artifacts available.</p>
-              <Link href="/select/drive">Connect Drive sources</Link>
-            </div>
-          ) : null}
-          {groundedResponse ? (
+          {answer ? (
             <>
-              <h3 style={{ marginTop: 14, marginBottom: 4 }}>Sources</h3>
-              <CitationChips citations={citations} />
+              <div className={styles.userMessage}>
+                <div className={styles.userBubble}>{query}</div>
+              </div>
+              <div className={styles.aiMessage}>
+                {groundedResponse ? (
+                  <p className={styles.groundedHint}>Grounded in {uniqueCitationCount} timeline artifacts</p>
+                ) : null}
+                <div className={styles.aiBubble}>{answer}</div>
+                {groundedResponse ? (
+                  <div className={styles.citationRow}>
+                    <CitationChips citations={citations} />
+                  </div>
+                ) : null}
+                {showNoMatches ? (
+                  <div className={styles.noMatchesCard}>
+                    <p className={styles.noMatchesText}>No timeline artifacts available.</p>
+                    <Link href="/select/drive">Connect Drive sources</Link>
+                  </div>
+                ) : null}
+              </div>
             </>
           ) : null}
-        </article>
-      ) : null}
+
+          {loading ? (
+            <div className={styles.aiMessage}>
+              <div className={styles.aiBubble}>Thinking…</div>
+            </div>
+          ) : null}
+
+          {error ? <p className={styles.errorHint}>{error}</p> : null}
+        </div>
+
+        <div className={styles.inputRow}>
+          <textarea
+            className={styles.input}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                void send();
+              }
+            }}
+            placeholder="Ask a question about your timeline…"
+            rows={1}
+            disabled={loading}
+          />
+          <Button onClick={() => void send()} disabled={loading || query.trim().length < 2}>
+            {loading ? 'Thinking…' : 'Send'}
+          </Button>
+        </div>
+      </div>
+
+      <aside className={styles.sourcesPanel}>
+        <p className={styles.panelLabel}>Sources used</p>
+        {usedArtifactIds.length === 0 && !loading ? <p className={styles.panelEmpty}>None yet</p> : null}
+        {usedArtifactIds.map((id) => (
+          <div key={id} className={styles.sourceItem}>
+            <span className={styles.sourceLabel}>{id}</span>
+          </div>
+        ))}
+        {citations.length > 0 ? (
+          <>
+            <p className={styles.panelLabel}>Citations</p>
+            {citations.map((citation, index) => (
+              <div key={index} className={styles.sourceItem}>
+                <span className={styles.sourceLabel}>{citation.title ?? citation.artifactId}</span>
+              </div>
+            ))}
+          </>
+        ) : null}
+      </aside>
     </section>
   );
 }

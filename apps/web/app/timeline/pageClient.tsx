@@ -39,6 +39,7 @@ import EntityFilter from './EntityFilter';
 import ArtifactDetailsDrawer from './ArtifactDetailsDrawer';
 import styles from './timeline.module.css';
 
+type FilterMode = 'all' | 'open-loops' | 'decisions' | 'actions' | 'drive' | 'gmail';
 type TimelineDisplayMode = 'summaries' | 'timeline';
 type ExportFormat = 'pdf' | 'drive';
 
@@ -435,6 +436,7 @@ export default function TimelinePageClient() {
   const [hasHydrated, setHasHydrated] = useState(false);
   const [groupingMode, setGroupingMode] = useState<TimelineGroupMode>('day');
   const [displayMode, setDisplayMode] = useState<TimelineDisplayMode>('summaries');
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [filters, setFilters] = useState<TimelineFilters>(DEFAULT_FILTERS);
   const [entityFilter, setEntityFilter] = useState<string | null>(null);
   const [appliedSetMessage, setAppliedSetMessage] = useState<string | null>(null);
@@ -609,6 +611,15 @@ export default function TimelinePageClient() {
     () => (entityFilter ? filterArtifactsByEntity(visibleArtifactsBase, entityFilter) : visibleArtifactsBase),
     [entityFilter, visibleArtifactsBase],
   );
+  const filteredArtifacts = useMemo(() => {
+    if (filterMode === 'all') return visibleArtifacts;
+    if (filterMode === 'drive') return visibleArtifacts.filter((a) => a.artifact.source === 'drive');
+    if (filterMode === 'gmail') return visibleArtifacts.filter((a) => a.artifact.source === 'gmail');
+    if (filterMode === 'open-loops') return visibleArtifacts.filter((a) => (a.artifact.openLoops?.length ?? 0) > 0);
+    if (filterMode === 'decisions') return visibleArtifacts.filter((a) => (a.artifact.decisions?.length ?? 0) > 0);
+    if (filterMode === 'actions') return visibleArtifacts.filter((a) => (a.artifact.suggestedActions?.length ?? 0) > 0);
+    return visibleArtifacts;
+  }, [filterMode, visibleArtifacts]);
   const visibleEntryKeys = useMemo(
     () => new Set(visibleArtifacts.map((item) => item.entryKey)),
     [visibleArtifacts],
@@ -2849,11 +2860,49 @@ export default function TimelinePageClient() {
             </Button>
           </Card>
         ) : displayMode === 'timeline' ? (
-          <TimelineView
-            artifacts={visibleArtifacts}
-            highlightedArtifactId={highlightedArtifactId}
-            onSelectArtifact={openArtifactDrawer}
-          />
+          <div className={styles.twoCol}>
+            <nav className={styles.filterNav} aria-label="Filter timeline">
+              <p className={styles.filterNavLabel}>View</p>
+              {(
+                [
+                  { mode: 'all', label: 'All entries' },
+                  { mode: 'open-loops', label: 'Open loops' },
+                  { mode: 'decisions', label: 'Decisions' },
+                  { mode: 'actions', label: 'Actions' },
+                ] as Array<{ mode: FilterMode; label: string }>
+              ).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  className={`${styles.filterNavItem} ${filterMode === mode ? styles.filterNavItemActive : ''}`}
+                  onClick={() => setFilterMode(mode)}
+                >
+                  {label}
+                </button>
+              ))}
+              <p className={styles.filterNavLabel}>Source</p>
+              {(
+                [
+                  { mode: 'drive', label: 'Drive only' },
+                  { mode: 'gmail', label: 'Gmail only' },
+                ] as Array<{ mode: FilterMode; label: string }>
+              ).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  className={`${styles.filterNavItem} ${filterMode === mode ? styles.filterNavItemActive : ''}`}
+                  onClick={() => setFilterMode(mode)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+            <div className={styles.filterContent}>
+              <TimelineView
+                artifacts={filteredArtifacts}
+                highlightedArtifactId={highlightedArtifactId}
+                onSelectArtifact={openArtifactDrawer}
+              />
+            </div>
+          </div>
         ) : (
           <div className={styles.groupList}>
             {groupedEntries.map((group) => (
