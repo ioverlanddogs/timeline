@@ -1,13 +1,154 @@
-.page { display:flex; flex-direction:column; gap:20px; }
-.stepList { display:flex; flex-direction:column; gap:14px; }
-.stepCard { display:flex; flex-direction:column; gap:10px; }
-.stepHeader { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-.stepTitle { margin:0; }
-.stepActions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.linkButton { display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--primary); background:var(--primary); color:#fff; border-radius:10px; padding:10px 14px; font-weight:600; transition:all .2s ease; }
-.linkButton:hover, .linkButton:focus-visible { background:var(--primary-dark); border-color:var(--primary-dark); }
-.linkButton[aria-disabled='true'] { opacity:.6; cursor:not-allowed; }
-.secondaryLink { color:var(--primary-dark); font-size:.92rem; text-decoration:underline; }
-.inlineError { color:var(--danger); font-size:.92rem; margin:0; }
-.inlineInfo { color:var(--muted); font-size:.9rem; margin:0; }
-.folderMeta { display:flex; gap:6px; flex-wrap:wrap; }
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 640px;
+}
+
+/* ── Stepper bar ── */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.stepPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.stepPillDone {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.stepPillActive {
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.stepPillFuture {
+  background: var(--background);
+  color: var(--muted);
+}
+
+.stepPillNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: currentColor;
+  color: var(--surface);
+  flex-shrink: 0;
+}
+
+.stepPillDone .stepPillNum   { background: var(--success); color: #fff; }
+.stepPillActive .stepPillNum { background: var(--primary); color: #fff; }
+.stepPillFuture .stepPillNum { background: var(--border);  color: var(--muted); }
+
+.stepPillLabel {
+  color: inherit;
+}
+
+.stepConnector {
+  flex: 1;
+  min-width: 8px;
+  height: 1px;
+  background: var(--border);
+}
+
+.stepConnectorDone {
+  background: var(--success);
+}
+
+/* ── Detail panel ── */
+.detailPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.detailTitle {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.detailActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Shared helpers (kept from original) ── */
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.linkButton:hover,
+.linkButton:focus-visible {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.linkButton[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondaryLink {
+  color: var(--primary-dark);
+  font-size: 0.92rem;
+  text-decoration: underline;
+}
+
+.inlineError {
+  color: var(--danger);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.inlineInfo {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.folderMeta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
