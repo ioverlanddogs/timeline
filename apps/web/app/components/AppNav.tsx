@@ -3,84 +3,124 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
+import { useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { enableDemoTabs } from '../lib/featureFlags';
 
-type NavItem = {
-  href: string;
+type NavChild = { href: string; label: string };
+
+type NavGroup = {
   label: string;
-  match?: (pathname: string) => boolean;
+  href: string;
+  match: (pathname: string) => boolean;
+  children?: NavChild[];
 };
 
-const navItems: NavItem[] = [
+const baseGroups: NavGroup[] = [
   {
-    href: '/connect',
-    label: 'Connect',
-    match: (pathname) => pathname.startsWith('/connect'),
-  },
-  {
-    href: '/getting-started',
-    label: 'Getting Started',
-    match: (pathname) => pathname.startsWith('/getting-started'),
-  },
-  {
-    href: '/select/gmail',
-    label: 'Select Gmail',
-    match: (pathname) => pathname.startsWith('/select/gmail'),
-  },
-  {
-    href: '/select/drive',
-    label: 'Select Drive',
-    match: (pathname) => pathname.startsWith('/select/drive'),
-  },
-  {
-    href: '/drive-browser',
-    label: 'Browse Drive',
-    match: (pathname) => pathname.startsWith('/drive-browser'),
-  },
-  {
-    href: '/saved-searches',
-    label: 'Saved Searches',
-    match: (pathname) => pathname.startsWith('/saved-searches'),
-  },
-  {
-    href: '/saved-selections',
-    label: 'Saved Selections',
-    match: (pathname) => pathname.startsWith('/saved-selections'),
-  },
-  {
-    href: '/timeline',
     label: 'Timeline',
-    match: (pathname) => pathname.startsWith('/timeline'),
+    href: '/timeline',
+    match: (p) => p.startsWith('/timeline') || p === '/',
   },
   {
-    href: '/calendar',
-    label: 'Calendar',
-    match: (pathname) => pathname.startsWith('/calendar'),
+    label: 'Select',
+    href: '/select/drive',
+    match: (p) =>
+      p.startsWith('/select') ||
+      p.startsWith('/drive-browser') ||
+      p.startsWith('/saved-searches') ||
+      p.startsWith('/saved-selections') ||
+      p.startsWith('/selection-sets'),
+    children: [
+      { href: '/select/drive', label: 'Select from Drive' },
+      { href: '/select/gmail', label: 'Select from Gmail' },
+      { href: '/drive-browser', label: 'Browse Drive' },
+      { href: '/saved-selections', label: 'Saved selections' },
+      { href: '/saved-searches', label: 'Saved searches' },
+    ],
   },
   {
-    href: '/chat',
     label: 'Chat',
-    match: (pathname) => pathname.startsWith('/chat'),
+    href: '/timeline/chat',
+    match: (p) => p.startsWith('/timeline/chat') || p.startsWith('/chat'),
+  },
+  {
+    label: 'Setup',
+    href: '/getting-started',
+    match: (p) =>
+      p.startsWith('/getting-started') ||
+      p.startsWith('/connect') ||
+      p.startsWith('/calendar'),
+    children: [
+      { href: '/getting-started', label: 'Getting started' },
+      { href: '/connect', label: 'Connect Google' },
+    ],
   },
 ];
 
 export default function AppNav() {
   const pathname = usePathname() ?? '/';
-  const visibleItems = enableDemoTabs()
-    ? navItems
-    : navItems.filter((item) => item.href !== '/calendar' && item.href !== '/chat');
+  const { data: session } = useSession();
+
+  const groups = enableDemoTabs()
+    ? baseGroups.map((g) =>
+        g.label === 'Setup'
+          ? { ...g, children: [...(g.children ?? []), { href: '/calendar', label: 'Calendar' }] }
+          : g
+      )
+    : baseGroups;
+
+  const initials = session?.user?.name
+    ? session.user.name
+        .split(' ')
+        .map((part) => part[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : session?.user?.email?.[0]?.toUpperCase() ?? '?';
 
   return (
     <nav className="app-nav" aria-label="Primary">
-      {visibleItems.map((item) => {
-        const isActive = item.match ? item.match(pathname) : pathname === item.href;
+      {groups.map((group) => {
+        const isActive = group.match(pathname);
+
+        if (!group.children) {
+          return (
+            <Link key={group.href} href={group.href} data-active={isActive}>
+              {group.label}
+            </Link>
+          );
+        }
+
         return (
-          <Link key={item.href} href={item.href} data-active={isActive}>
-            {item.label}
-          </Link>
+          <details key={group.href} className="nav-dropdown" open={isActive || undefined}>
+            <summary data-active={isActive}>{group.label}</summary>
+            <div className="nav-dropdown-panel">
+              {group.children.map((child) => (
+                <Link key={child.href} href={child.href}>
+                  {child.label}
+                </Link>
+              ))}
+            </div>
+          </details>
         );
       })}
+
+      <div className="nav-spacer" />
+
+      {session ? (
+        <details className="nav-dropdown nav-avatar-dropdown">
+          <summary className="nav-avatar" aria-label="Account menu">
+            {initials}
+          </summary>
+          <div className="nav-dropdown-panel nav-dropdown-panel--right">
+            <span className="nav-user-email">{session.user?.email}</span>
+            <button className="nav-signout" onClick={() => void signOut({ callbackUrl: '/' })}>
+              Sign out
+            </button>
+          </div>
+        </details>
+      ) : null}
     </nav>
   );
 }
