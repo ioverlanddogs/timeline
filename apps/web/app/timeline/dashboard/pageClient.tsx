@@ -184,7 +184,7 @@ export default function TimelineDashboardPageClient() {
       ) : null}
 
       {loading ? <p>Loading…</p> : null}
-      {error ? <p style={{ color: '#b00020' }}>{error}</p> : null}
+      {error ? <p style={{ color: 'var(--danger)' }}>{error}</p> : null}
 
       {data ? (
         <>
@@ -273,7 +273,7 @@ export default function TimelineDashboardPageClient() {
                       </a>
                     ) : null}
                   </div>
-                  {rowErrors[rowKey] ? <p style={{ color: '#b00020' }}>{rowErrors[rowKey]}</p> : null}
+                  {rowErrors[rowKey] ? <p style={{ color: 'var(--danger)' }}>{rowErrors[rowKey]}</p> : null}
                 </li>
               );
             })}
